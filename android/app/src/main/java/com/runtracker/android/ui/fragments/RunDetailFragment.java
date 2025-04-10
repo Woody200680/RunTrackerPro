@@ -1,20 +1,17 @@
 package com.runtracker.android.ui.fragments;
 
-import android.app.AlertDialog;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
+import android.widget.ImageButton;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.widget.Toolbar;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
-import androidx.navigation.NavController;
 import androidx.navigation.Navigation;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -27,26 +24,34 @@ import com.google.android.gms.maps.model.PolylineOptions;
 import com.runtracker.android.R;
 import com.runtracker.android.data.models.Run;
 import com.runtracker.android.data.repositories.RunRepository;
+import com.runtracker.android.ui.MainActivity;
 import com.runtracker.android.utils.FormatUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Fragment for displaying details of a specific run
+ */
 public class RunDetailFragment extends Fragment implements OnMapReadyCallback {
 
+    private TextView tvRunTitle;
+    private TextView tvDetailDate;
+    private TextView tvDetailDuration;
+    private TextView tvDetailDistance;
+    private TextView tvDetailPace;
+    private TextView tvDetailCalories;
+    private ImageButton btnBack;
+    private ImageButton btnDelete;
+    
     private RunRepository runRepository;
+    private GoogleMap map;
     private Run run;
     private String runId;
-    private NavController navController;
     
-    private TextView tvRunDate, tvDistance, tvDuration, tvPace, tvCalories;
-    private Button btnDelete;
-    private Toolbar toolbar;
-    private GoogleMap googleMap;
-    
-    @Nullable
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_run_detail, container, false);
     }
     
@@ -55,137 +60,141 @@ public class RunDetailFragment extends Fragment implements OnMapReadyCallback {
         super.onViewCreated(view, savedInstanceState);
         
         // Initialize views
-        tvRunDate = view.findViewById(R.id.tvRunDate);
-        tvDistance = view.findViewById(R.id.tvDistance);
-        tvDuration = view.findViewById(R.id.tvDuration);
-        tvPace = view.findViewById(R.id.tvPace);
-        tvCalories = view.findViewById(R.id.tvCalories);
+        tvRunTitle = view.findViewById(R.id.tvRunTitle);
+        tvDetailDate = view.findViewById(R.id.tvDetailDate);
+        tvDetailDuration = view.findViewById(R.id.tvDetailDuration);
+        tvDetailDistance = view.findViewById(R.id.tvDetailDistance);
+        tvDetailPace = view.findViewById(R.id.tvDetailPace);
+        tvDetailCalories = view.findViewById(R.id.tvDetailCalories);
+        btnBack = view.findViewById(R.id.btnBack);
         btnDelete = view.findViewById(R.id.btnDelete);
-        toolbar = view.findViewById(R.id.toolbar);
         
-        // Set up toolbar navigation
-        toolbar.setNavigationOnClickListener(v -> requireActivity().onBackPressed());
+        // Get dependencies
+        runRepository = ((MainActivity) requireActivity()).getRunRepository();
         
-        // Initialize map
+        // Get run ID from arguments
+        RunDetailFragmentArgs args = RunDetailFragmentArgs.fromBundle(requireArguments());
+        runId = args.getRunId();
+        
+        // Load run data
+        loadRunData();
+        
+        // Set up map
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
-                .findFragmentById(R.id.map);
+                .findFragmentById(R.id.mapViewDetail);
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
         
-        // Initialize navigation controller
-        navController = Navigation.findNavController(view);
-        
-        // Get run ID from arguments
-        if (getArguments() != null) {
-            runId = getArguments().getString("runId");
-        }
-        
-        // Initialize repository
-        runRepository = new RunRepository(requireContext());
-        
-        // Load run data
-        loadRunDetails();
-        
-        // Set up delete button
-        btnDelete.setOnClickListener(v -> showDeleteConfirmationDialog());
+        // Set up button listeners
+        btnBack.setOnClickListener(v -> Navigation.findNavController(view).popBackStack());
+        btnDelete.setOnClickListener(v -> showDeleteConfirmation());
     }
     
-    private void loadRunDetails() {
-        if (runId == null) {
-            Toast.makeText(requireContext(), "Run not found", Toast.LENGTH_SHORT).show();
-            navController.navigateUp();
-            return;
-        }
-        
+    /**
+     * Load run data from repository
+     */
+    private void loadRunData() {
         run = runRepository.getRunById(runId);
-        if (run == null) {
-            Toast.makeText(requireContext(), "Run not found", Toast.LENGTH_SHORT).show();
-            navController.navigateUp();
-            return;
-        }
         
-        // Display run data
-        tvRunDate.setText(FormatUtils.formatDateTime(run.getStartTime()));
-        tvDistance.setText(FormatUtils.formatDistance(run.getDistanceInMeters()));
-        tvDuration.setText(FormatUtils.formatDuration(run.getDurationInSeconds()));
-        tvPace.setText(FormatUtils.formatPace(run.getPace()));
-        tvCalories.setText(FormatUtils.formatCalories(run.getCaloriesBurned()));
+        if (run != null) {
+            // Set run title
+            String formattedDate = FormatUtils.formatDate(run.getStartTime());
+            tvRunTitle.setText(getString(R.string.run_date, formattedDate));
+            
+            // Set run details
+            String formattedDateTime = FormatUtils.formatDateTime(run.getStartTime());
+            tvDetailDate.setText(getString(R.string.run_start_time, 
+                    FormatUtils.formatDate(run.getStartTime()), 
+                    FormatUtils.formatTime(run.getStartTime())));
+            
+            tvDetailDuration.setText(getString(R.string.run_duration, 
+                    FormatUtils.formatDuration(run.getActiveDuration())));
+            
+            tvDetailDistance.setText(getString(R.string.run_distance, 
+                    FormatUtils.formatDistance(run.getTotalDistance())));
+            
+            tvDetailPace.setText(getString(R.string.run_pace, 
+                    FormatUtils.formatPace(run.getPace())));
+            
+            tvDetailCalories.setText(getString(R.string.run_calories, 
+                    FormatUtils.formatCalories(run.getCaloriesBurned())));
+        }
     }
     
     @Override
-    public void onMapReady(GoogleMap map) {
-        googleMap = map;
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        map = googleMap;
         
-        if (run != null) {
-            drawRouteOnMap();
+        if (run != null && !run.getLocationPoints().isEmpty()) {
+            drawRoute();
         }
     }
     
-    private void drawRouteOnMap() {
-        if (run.getRoutePoints() == null || run.getRoutePoints().isEmpty()) {
-            // No route points available
-            return;
-        }
-        
-        // Parse route points
-        List<LatLng> points = new ArrayList<>();
-        LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
-        
-        for (String pointStr : run.getRoutePoints()) {
-            String[] latLng = pointStr.split(",");
-            if (latLng.length == 2) {
-                try {
-                    double lat = Double.parseDouble(latLng[0]);
-                    double lng = Double.parseDouble(latLng[1]);
-                    LatLng point = new LatLng(lat, lng);
-                    points.add(point);
+    /**
+     * Draw the route on the map
+     */
+    private void drawRoute() {
+        if (map != null && run != null && !run.getLocationPoints().isEmpty()) {
+            // Clear previous polylines
+            map.clear();
+            
+            // Get location points
+            List<Run.LocationPoint> points = run.getLocationPoints();
+            List<LatLng> routePoints = new ArrayList<>();
+            
+            for (Run.LocationPoint point : points) {
+                routePoints.add(new LatLng(point.getLatitude(), point.getLongitude()));
+            }
+            
+            // Draw polyline
+            PolylineOptions polylineOptions = new PolylineOptions()
+                    .addAll(routePoints)
+                    .color(ContextCompat.getColor(requireContext(), R.color.primary))
+                    .width(12);
+            
+            map.addPolyline(polylineOptions);
+            
+            // Zoom to fit route
+            if (routePoints.size() > 1) {
+                LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
+                for (LatLng point : routePoints) {
                     boundsBuilder.include(point);
-                } catch (NumberFormatException e) {
-                    // Skip invalid point
                 }
-            }
-        }
-        
-        if (points.isEmpty()) {
-            return;
-        }
-        
-        // Draw polyline
-        googleMap.addPolyline(new PolylineOptions()
-                .addAll(points)
-                .width(10)
-                .color(Color.BLUE));
-        
-        // Zoom to show the entire route with padding
-        try {
-            LatLngBounds bounds = boundsBuilder.build();
-            int padding = 100; // offset from edges of the map in pixels
-            googleMap.moveCamera(CameraUpdateFactory.newLatLngBounds(bounds, padding));
-        } catch (IllegalStateException e) {
-            // This can happen if bounds has no points
-            // In this case, we'll just center on the first point
-            if (!points.isEmpty()) {
-                googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(points.get(0), 15f));
+                LatLngBounds bounds = boundsBuilder.build();
+                
+                map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+            } else if (routePoints.size() == 1) {
+                // If there's only one point, just center on it
+                map.animateCamera(CameraUpdateFactory.newLatLngZoom(routePoints.get(0), 15));
             }
         }
     }
     
-    private void showDeleteConfirmationDialog() {
+    /**
+     * Show delete confirmation dialog
+     */
+    private void showDeleteConfirmation() {
         new AlertDialog.Builder(requireContext())
-                .setTitle("Delete Run")
-                .setMessage("Are you sure you want to delete this run? This action cannot be undone.")
-                .setPositiveButton("Delete", (dialog, which) -> deleteRun())
-                .setNegativeButton("Cancel", null)
+                .setTitle(R.string.delete_run)
+                .setMessage(R.string.delete_confirmation)
+                .setPositiveButton(R.string.delete, (dialog, which) -> {
+                    deleteRun();
+                })
+                .setNegativeButton(R.string.cancel, (dialog, which) -> {
+                    dialog.dismiss();
+                })
                 .create()
                 .show();
     }
     
+    /**
+     * Delete the run and navigate back
+     */
     private void deleteRun() {
-        if (runId != null) {
-            runRepository.deleteRun(runId);
-            Toast.makeText(requireContext(), "Run deleted", Toast.LENGTH_SHORT).show();
-            navController.navigateUp();
+        if (runRepository.deleteRun(runId)) {
+            // Navigate back
+            Navigation.findNavController(requireView()).popBackStack();
         }
     }
 }

@@ -2,65 +2,61 @@
 <resources>
     <string name="app_name">Run Tracker</string>
     
-    <!-- Bottom navigation titles -->
+    <!-- Bottom Navigation -->
     <string name="track">Track</string>
     <string name="history">History</string>
     <string name="stats">Stats</string>
     
-    <!-- Track fragment -->
+    <!-- Track Fragment -->
     <string name="start_run">Start Run</string>
-    <string name="resume_run">Resume</string>
-    <string name="pause_run">Pause</string>
-    <string name="stop_run">Stop</string>
-    <string name="distance">Distance</string>
+    <string name="pause_run">Pause Run</string>
+    <string name="resume_run">Resume Run</string>
+    <string name="stop_run">Stop Run</string>
+    <string name="tracking_disabled">GPS tracking disabled</string>
+    <string name="tracking_enabled">GPS tracking enabled</string>
+    <string name="tracking_connecting">Connecting to GPS…</string>
     <string name="duration">Duration</string>
+    <string name="distance">Distance</string>
     <string name="pace">Pace</string>
     <string name="calories">Calories</string>
-    <string name="tracking_enabled">GPS tracking enabled</string>
-    <string name="tracking_disabled">GPS tracking disabled</string>
-    <string name="distance_format">%.2f km</string>
-    <string name="pace_format">%d:%02d min/km</string>
-    <string name="duration_format">%02d:%02d:%02d</string>
-    <string name="calories_format">%d kcal</string>
     
-    <!-- Run history fragment -->
+    <!-- History Fragment -->
     <string name="no_runs">No runs recorded yet</string>
-    <string name="total_runs">Total Runs: %d</string>
-    <string name="filter">Filter</string>
-    <string name="sort">Sort</string>
-    <string name="delete">Delete</string>
-    <string name="run_date_format">%s at %s</string>
+    <string name="total_runs">Total Runs: %1$d</string>
+    <string name="run_date_time">%1$s at %2$s</string>
     
-    <!-- Run details fragment -->
-    <string name="run_details">Run Details</string>
-    <string name="average_pace">Average Pace</string>
-    <string name="total_distance">Total Distance</string>
-    <string name="total_duration">Total Duration</string>
-    <string name="total_calories">Calories Burned</string>
-    <string name="route">Route</string>
-    
-    <!-- Stats fragment -->
+    <!-- Stats Fragment -->
     <string name="total_stats">Total Stats</string>
-    <string name="total_distance_stats">Total Distance: %.2f km</string>
-    <string name="total_duration_stats">Total Duration: %s</string>
-    <string name="total_calories_stats">Total Calories: %d kcal</string>
-    <string name="average_pace_stats">Average Pace: %s min/km</string>
+    <string name="total_distance">Total Distance: %1$s</string>
+    <string name="total_duration">Total Duration: %1$s</string>
+    <string name="average_pace">Average Pace: %1$s</string>
+    <string name="total_calories">Total Calories: %1$s</string>
     <string name="runs_this_week">Runs This Week</string>
     <string name="runs_this_month">Runs This Month</string>
-    <string name="average_distance">Average Distance</string>
-    <string name="longest_run">Longest Run</string>
     
-    <!-- Permissions -->
-    <string name="location_permission_title">Location Permission Required</string>
-    <string name="location_permission_message">This app needs location permission to track your runs. Please grant permission to continue.</string>
-    <string name="grant_permission">Grant Permission</string>
+    <!-- Run Detail Fragment -->
+    <string name="back">Back</string>
+    <string name="delete_run">Delete Run</string>
+    <string name="run_date">Run on %1$s</string>
+    <string name="run_start_time">Started: %1$s at %2$s</string>
+    <string name="run_duration">Duration: %1$s</string>
+    <string name="run_distance">Distance: %1$s</string>
+    <string name="run_pace">Average Pace: %1$s</string>
+    <string name="run_calories">Calories Burned: %1$s</string>
+    <string name="delete_confirmation">Are you sure you want to delete this run?</string>
+    <string name="delete">Delete</string>
     <string name="cancel">Cancel</string>
     
-    <!-- Error messages -->
-    <string name="gps_not_available">GPS is not available</string>
-    <string name="enable_gps">Please enable GPS in your device settings</string>
-    <string name="error_saving_run">Error saving run</string>
-    <string name="confirm_delete_run">Are you sure you want to delete this run?</string>
-    <string name="yes">Yes</string>
-    <string name="no">No</string>
+    <!-- Permissions -->
+    <string name="location_permission_needed">Location permission is needed to track your runs</string>
+    <string name="location_permission_denied">Location permission denied. You can change this in app settings.</string>
+    <string name="grant_permission">Grant Permission</string>
+    <string name="open_settings">Open Settings</string>
+    
+    <!-- Notifications -->
+    <string name="tracking_notification_title">Run Tracker</string>
+    <string name="tracking_notification_text">Recording your run…</string>
+    <string name="tracking_notification_pause">Pause</string>
+    <string name="tracking_notification_resume">Resume</string>
+    <string name="tracking_notification_stop">Stop</string>
 </resources>

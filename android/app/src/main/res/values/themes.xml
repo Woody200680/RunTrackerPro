@@ -1,66 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Base application theme -->
-    <style name="Theme.RunTracker" parent="Theme.MaterialComponents.Light.NoActionBar">
-        <!-- Primary brand color -->
+    <!-- Base application theme. -->
+    <style name="Theme.RunTracker" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <!-- Primary brand color. -->
         <item name="colorPrimary">@color/primary</item>
         <item name="colorPrimaryVariant">@color/primary_dark</item>
         <item name="colorOnPrimary">@color/white</item>
-        
-        <!-- Secondary brand color -->
+        <!-- Secondary brand color. -->
         <item name="colorSecondary">@color/accent</item>
-        <item name="colorSecondaryVariant">@color/accent</item>
-        <item name="colorOnSecondary">@color/white</item>
-        
-        <!-- Status bar color -->
-        <item name="android:statusBarColor">@color/primary_dark</item>
-        
-        <!-- Background color -->
-        <item name="android:windowBackground">@color/background</item>
-        
-        <!-- Text appearance -->
+        <item name="colorSecondaryVariant">@color/accent_light</item>
+        <item name="colorOnSecondary">@color/black</item>
+        <!-- Status bar color. -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+        <!-- Background colors -->
+        <item name="android:colorBackground">@color/background</item>
+        <item name="colorSurface">@color/surface</item>
+        <!-- Error colors -->
+        <item name="colorError">@color/error</item>
+        <!-- Text colors -->
         <item name="android:textColorPrimary">@color/text_primary</item>
         <item name="android:textColorSecondary">@color/text_secondary</item>
-    </style>
-    
-    <!-- Button styles -->
-    <style name="Widget.RunTracker.Button" parent="Widget.MaterialComponents.Button">
-        <item name="android:textColor">@color/white</item>
-        <item name="android:textSize">16sp</item>
-        <item name="android:padding">12dp</item>
-    </style>
-    
-    <!-- Text styles -->
-    <style name="TextAppearance.RunTracker.Title" parent="TextAppearance.MaterialComponents.Headline5">
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:textSize">22sp</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-    
-    <style name="TextAppearance.RunTracker.Subtitle" parent="TextAppearance.MaterialComponents.Subtitle1">
-        <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:textSize">16sp</item>
-    </style>
-    
-    <style name="TextAppearance.RunTracker.Body" parent="TextAppearance.MaterialComponents.Body1">
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:textSize">14sp</item>
-    </style>
-    
-    <style name="TextAppearance.RunTracker.Caption" parent="TextAppearance.MaterialComponents.Caption">
-        <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:textSize">12sp</item>
-    </style>
-    
-    <!-- Metric display style -->
-    <style name="TextAppearance.RunTracker.Metric.Value" parent="TextAppearance.MaterialComponents.Headline4">
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:textSize">28sp</item>
-        <item name="android:textStyle">bold</item>
-    </style>
-    
-    <style name="TextAppearance.RunTracker.Metric.Label" parent="TextAppearance.MaterialComponents.Body2">
-        <item name="android:textColor">@color/text_secondary</item>
-        <item name="android:textSize">14sp</item>
     </style>
 </resources>

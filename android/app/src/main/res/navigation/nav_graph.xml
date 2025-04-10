@@ -34,7 +34,7 @@
     <fragment
         android:id="@+id/runDetailFragment"
         android:name="com.runtracker.android.ui.fragments.RunDetailFragment"
-        android:label="@string/run_details"
+        android:label="@string/track"
         tools:layout="@layout/fragment_run_detail">
         <argument
             android:name="runId"

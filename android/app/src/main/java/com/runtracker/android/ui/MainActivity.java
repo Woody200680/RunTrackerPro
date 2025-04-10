@@ -1,9 +1,13 @@
 package com.runtracker.android.ui;
 
 import android.Manifest;
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.view.View;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -12,90 +16,133 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.NavigationUI;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.snackbar.Snackbar;
 import com.runtracker.android.R;
-import com.runtracker.android.databinding.ActivityMainBinding;
+import com.runtracker.android.data.repositories.RunRepository;
 
-/**
- * Main activity for the Run Tracker app
- */
 public class MainActivity extends AppCompatActivity {
-    
-    private ActivityMainBinding binding;
+
+    private BottomNavigationView bottomNavigationView;
     private NavController navController;
+    private RunRepository runRepository;
     
-    private final ActivityResultLauncher<String[]> locationPermissionRequest =
-            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), result -> {
-                Boolean fineLocationGranted = result.getOrDefault(
-                        Manifest.permission.ACCESS_FINE_LOCATION, false);
-                Boolean coarseLocationGranted = result.getOrDefault(
-                        Manifest.permission.ACCESS_COARSE_LOCATION, false);
-                
-                if (fineLocationGranted != null && fineLocationGranted) {
-                    // Precise location access granted
-                } else if (coarseLocationGranted != null && coarseLocationGranted) {
-                    // Only approximate location access granted
+    private final ActivityResultLauncher<String> requestPermissionLauncher =
+            registerForActivityResult(new ActivityResultContracts.RequestPermission(), isGranted -> {
+                if (isGranted) {
+                    // Permission is granted
+                    showSnackbar(getString(R.string.tracking_enabled));
                 } else {
-                    // No location access granted
-                    showLocationPermissionDeniedDialog();
+                    // Permission denied
+                    if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+                        showLocationPermissionDialog();
+                    } else {
+                        showSettingsDialog();
+                    }
                 }
             });
-    
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
         
-        // Inflate layout using View Binding
-        binding = ActivityMainBinding.inflate(getLayoutInflater());
-        setContentView(binding.getRoot());
+        // Initialize repository
+        runRepository = RunRepository.getInstance(this);
         
         // Set up navigation
-        BottomNavigationView bottomNavigationView = binding.bottomNavigationView;
-        navController = Navigation.findNavController(this, R.id.navHostFragment);
-        NavigationUI.setupWithNavController(bottomNavigationView, navController);
+        bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        NavHostFragment navHostFragment = (NavHostFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.navHostFragment);
         
-        // Check location permissions
-        checkLocationPermissions();
+        if (navHostFragment != null) {
+            navController = navHostFragment.getNavController();
+            NavigationUI.setupWithNavController(bottomNavigationView, navController);
+        }
+        
+        // Check for location permission
+        checkLocationPermission();
     }
     
     /**
-     * Check if the app has the necessary location permissions
+     * Check if the app has location permission
      */
-    private void checkLocationPermissions() {
-        boolean fineLocationPermissionGranted = ContextCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-        
-        boolean coarseLocationPermissionGranted = ContextCompat.checkSelfPermission(
-                this, Manifest.permission.ACCESS_COARSE_LOCATION) == PackageManager.PERMISSION_GRANTED;
-        
-        if (!fineLocationPermissionGranted || !coarseLocationPermissionGranted) {
-            requestLocationPermissions();
+    private void checkLocationPermission() {
+        if (ContextCompat.checkSelfPermission(
+                this, Manifest.permission.ACCESS_FINE_LOCATION) ==
+                PackageManager.PERMISSION_GRANTED) {
+            // Permission is already granted
+        } else {
+            // Request the permission
+            requestLocationPermission();
         }
     }
     
     /**
-     * Request location permissions
+     * Request location permission
      */
-    private void requestLocationPermissions() {
-        locationPermissionRequest.launch(new String[]{
-                Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.ACCESS_COARSE_LOCATION
-        });
+    private void requestLocationPermission() {
+        if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)) {
+            showLocationPermissionDialog();
+        } else {
+            requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+        }
     }
     
     /**
-     * Show a dialog explaining that location permissions are needed
+     * Show dialog explaining why we need location permission
      */
-    private void showLocationPermissionDeniedDialog() {
+    private void showLocationPermissionDialog() {
         new AlertDialog.Builder(this)
-                .setTitle(R.string.location_permission_title)
-                .setMessage(R.string.location_permission_message)
-                .setPositiveButton(R.string.grant_permission, (dialog, which) -> requestLocationPermissions())
-                .setNegativeButton(R.string.cancel, (dialog, which) -> dialog.dismiss())
+                .setTitle(R.string.location_permission_needed)
+                .setMessage(R.string.location_permission_needed)
+                .setPositiveButton(R.string.grant_permission, (dialog, which) -> {
+                    requestPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION);
+                })
+                .setNegativeButton(R.string.cancel, (dialog, which) -> {
+                    dialog.dismiss();
+                })
                 .create()
                 .show();
+    }
+    
+    /**
+     * Show dialog to go to app settings to enable location permission
+     */
+    private void showSettingsDialog() {
+        new AlertDialog.Builder(this)
+                .setTitle(R.string.location_permission_denied)
+                .setMessage(R.string.location_permission_denied)
+                .setPositiveButton(R.string.open_settings, (dialog, which) -> {
+                    Intent intent = new Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                    Uri uri = Uri.fromParts("package", getPackageName(), null);
+                    intent.setData(uri);
+                    startActivity(intent);
+                })
+                .setNegativeButton(R.string.cancel, (dialog, which) -> {
+                    dialog.dismiss();
+                })
+                .create()
+                .show();
+    }
+    
+    /**
+     * Show a snackbar with message
+     * @param message Message to show
+     */
+    private void showSnackbar(String message) {
+        View rootView = findViewById(android.R.id.content);
+        Snackbar.make(rootView, message, Snackbar.LENGTH_SHORT).show();
+    }
+    
+    /**
+     * Get the run repository instance
+     * @return RunRepository
+     */
+    public RunRepository getRunRepository() {
+        return runRepository;
     }
 }

@@ -6,218 +6,160 @@
     android:layout_height="match_parent"
     tools:context=".ui.fragments.TrackFragment">
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/mapCard"
+    <androidx.fragment.app.FragmentContainerView
+        android:id="@+id/mapView"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
         android:layout_width="0dp"
         android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvGpsStatus"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/rounded_background"
+        android:drawablePadding="4dp"
+        android:padding="8dp"
+        android:text="@string/tracking_disabled"
+        android:textColor="@color/white"
+        app:drawableStartCompat="@drawable/ic_gps_searching"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.cardview.widget.CardView
+        android:id="@+id/cardMetrics"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_margin="16dp"
         app:cardCornerRadius="8dp"
         app:cardElevation="4dp"
-        app:layout_constraintBottom_toTopOf="@+id/metricsCard"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
-
-        <fragment
-            android:id="@+id/map"
-            android:name="com.google.android.gms.maps.SupportMapFragment"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-        <TextView
-            android:id="@+id/tvGpsStatus"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="top|end"
-            android:layout_margin="8dp"
-            android:background="@drawable/rounded_background"
-            android:drawablePadding="4dp"
-            android:padding="8dp"
-            android:text="@string/searching_gps"
-            android:textColor="@color/white"
-            android:textSize="12sp"
-            app:drawableStartCompat="@drawable/ic_gps_searching" />
-
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
-        android:id="@+id/metricsCard"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="4dp"
-        app:layout_constraintBottom_toTopOf="@+id/controlsCard"
+        app:layout_constraintBottom_toTopOf="@+id/fabAction"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:padding="16dp">
 
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/tvDurationLabel"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:text="@string/duration"
+                android:textAppearance="@style/TextAppearance.RunTracker.Metric.Label"
+                app:layout_constraintEnd_toStartOf="@+id/tvDistanceLabel"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:drawablePadding="4dp"
-                    android:text="@string/time"
-                    android:textSize="14sp"
-                    app:drawableStartCompat="@drawable/ic_time" />
-
-                <TextView
-                    android:id="@+id/tvTime"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    tools:text="00:25:34" />
-
-            </LinearLayout>
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:background="@color/divider" />
-
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/tvDuration"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:textAppearance="@style/TextAppearance.RunTracker.Metric.Value"
+                app:layout_constraintEnd_toEndOf="@+id/tvDurationLabel"
+                app:layout_constraintStart_toStartOf="@+id/tvDurationLabel"
+                app:layout_constraintTop_toBottomOf="@+id/tvDurationLabel"
+                tools:text="00:25:30" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:drawablePadding="4dp"
-                    android:text="@string/distance"
-                    android:textSize="14sp"
-                    app:drawableStartCompat="@drawable/ic_distance" />
-
-                <TextView
-                    android:id="@+id/tvDistance"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    tools:text="5.2 km" />
-
-            </LinearLayout>
-
-            <View
-                android:layout_width="1dp"
-                android:layout_height="match_parent"
-                android:background="@color/divider" />
-
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/tvDistanceLabel"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:gravity="center"
-                android:orientation="vertical">
+                android:text="@string/distance"
+                android:textAppearance="@style/TextAppearance.RunTracker.Metric.Label"
+                app:layout_constraintEnd_toStartOf="@+id/tvPaceLabel"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/tvDurationLabel"
+                app:layout_constraintTop_toTopOf="parent" />
 
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:drawablePadding="4dp"
-                    android:text="@string/pace"
-                    android:textSize="14sp"
-                    app:drawableStartCompat="@drawable/ic_pace" />
+            <TextView
+                android:id="@+id/tvDistance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.RunTracker.Metric.Value"
+                app:layout_constraintEnd_toEndOf="@+id/tvDistanceLabel"
+                app:layout_constraintStart_toStartOf="@+id/tvDistanceLabel"
+                app:layout_constraintTop_toBottomOf="@+id/tvDistanceLabel"
+                tools:text="5.2 km" />
 
-                <TextView
-                    android:id="@+id/tvPace"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:textSize="24sp"
-                    android:textStyle="bold"
-                    tools:text="5:18 /km" />
+            <TextView
+                android:id="@+id/tvPaceLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/pace"
+                android:textAppearance="@style/TextAppearance.RunTracker.Metric.Label"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/tvDistanceLabel"
+                app:layout_constraintTop_toTopOf="parent" />
 
-            </LinearLayout>
+            <TextView
+                android:id="@+id/tvPace"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.RunTracker.Metric.Value"
+                app:layout_constraintEnd_toEndOf="@+id/tvPaceLabel"
+                app:layout_constraintStart_toStartOf="@+id/tvPaceLabel"
+                app:layout_constraintTop_toBottomOf="@+id/tvPaceLabel"
+                tools:text="5:30" />
 
-        </LinearLayout>
+            <TextView
+                android:id="@+id/tvCaloriesLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:text="@string/calories"
+                android:textAppearance="@style/TextAppearance.RunTracker.Metric.Label"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tvDuration" />
+
+            <TextView
+                android:id="@+id/tvCalories"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="@style/TextAppearance.RunTracker.Metric.Value"
+                app:layout_constraintEnd_toEndOf="@+id/tvCaloriesLabel"
+                app:layout_constraintStart_toStartOf="@+id/tvCaloriesLabel"
+                app:layout_constraintTop_toBottomOf="@+id/tvCaloriesLabel"
+                tools:text="250 kcal" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.cardview.widget.CardView>
 
-    <androidx.cardview.widget.CardView
-        android:id="@+id/controlsCard"
-        android:layout_width="0dp"
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAction"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="16dp"
-        app:cardCornerRadius="8dp"
-        app:cardElevation="4dp"
+        android:layout_marginBottom="24dp"
+        android:contentDescription="@string/start_run"
+        android:src="@drawable/ic_run"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent">
+        app:layout_constraintStart_toStartOf="parent"
+        app:tint="@color/white" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:orientation="horizontal"
-            android:padding="16dp">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnStart"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:text="@string/start"
-                app:cornerRadius="8dp"
-                app:icon="@drawable/ic_run" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnPause"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:text="@string/pause"
-                android:visibility="gone"
-                app:cornerRadius="8dp"
-                app:icon="@drawable/ic_pause"
-                tools:visibility="visible" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnResume"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:layout_marginEnd="8dp"
-                android:text="@string/resume"
-                android:visibility="gone"
-                app:cornerRadius="8dp"
-                app:icon="@drawable/ic_run"
-                tools:visibility="gone" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btnStop"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
-                android:backgroundTint="@color/error"
-                android:text="@string/stop"
-                android:visibility="gone"
-                app:cornerRadius="8dp"
-                app:icon="@drawable/ic_stop"
-                tools:visibility="visible" />
-
-        </LinearLayout>
-
-    </androidx.cardview.widget.CardView>
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabStop"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:contentDescription="@string/stop_run"
+        android:src="@drawable/ic_stop"
+        android:visibility="gone"
+        app:backgroundTint="@color/error"
+        app:layout_constraintBottom_toBottomOf="@+id/fabAction"
+        app:layout_constraintEnd_toStartOf="@+id/fabAction"
+        app:layout_constraintTop_toTopOf="@+id/fabAction"
+        app:tint="@color/white"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

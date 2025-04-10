@@ -7,16 +7,26 @@
     tools:context=".ui.fragments.HistoryFragment">
 
     <TextView
-        android:id="@+id/tvRunHistoryTitle"
+        android:id="@+id/tvHistoryTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:text="@string/run_history"
-        android:textSize="24sp"
-        android:textStyle="bold"
+        android:text="@string/history"
+        android:textAppearance="@style/TextAppearance.RunTracker.Title"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/tvTotalRuns"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/tvHistoryTitle"
+        tools:text="Total Runs: 12" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvRuns"
@@ -24,48 +34,24 @@
         android:layout_height="0dp"
         android:layout_marginTop="8dp"
         android:clipToPadding="false"
-        android:paddingBottom="8dp"
+        android:padding="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/tvRunHistoryTitle" />
+        app:layout_constraintTop_toBottomOf="@+id/tvTotalRuns"
+        tools:listitem="@layout/item_run" />
 
-    <LinearLayout
-        android:id="@+id/emptyState"
+    <TextView
+        android:id="@+id/tvNoRuns"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:gravity="center"
-        android:orientation="vertical"
+        android:text="@string/no_runs"
+        android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
         android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:visibility="visible">
-
-        <ImageView
-            android:layout_width="100dp"
-            android:layout_height="100dp"
-            android:contentDescription="@string/no_runs_recorded"
-            android:src="@drawable/ic_run"
-            app:tint="@color/text_hint" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/no_runs_recorded"
-            android:textSize="18sp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/btnStartTracking"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:text="@string/start_tracking"
-            app:cornerRadius="8dp"
-            app:icon="@drawable/ic_run" />
-
-    </LinearLayout>
+        app:layout_constraintTop_toBottomOf="@+id/tvTotalRuns"
+        tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
