@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:context=".ui.fragments.AdvancedStatsFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvAdvancedStatsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/advanced_statistics"
+            android:textAppearance="@style/TextAppearance.RunTracker.Title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- RECORDS SECTION -->
+        <TextView
+            android:id="@+id/tvRecordsSection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/personal_records"
+            android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvAdvancedStatsTitle" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardRecords"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvRecordsSection">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Longest Run -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/longest_run"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body" />
+
+                    <TextView
+                        android:id="@+id/tvLongestRun"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body.Bold"
+                        tools:text="12.4 km" />
+                </LinearLayout>
+
+                <!-- Longest Duration -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/longest_duration"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body" />
+
+                    <TextView
+                        android:id="@+id/tvLongestDuration"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body.Bold"
+                        tools:text="1h 45m 30s" />
+                </LinearLayout>
+
+                <!-- Best Pace -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/best_pace"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body" />
+
+                    <TextView
+                        android:id="@+id/tvBestPace"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body.Bold"
+                        tools:text="4:32 min/km" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- STREAKS SECTION -->
+        <TextView
+            android:id="@+id/tvStreaksSection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/streaks_and_frequency"
+            android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cardRecords" />
+
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardStreaks"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvStreaksSection">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Current Streak -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/current_streak"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body" />
+
+                    <TextView
+                        android:id="@+id/tvCurrentStreak"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body.Bold"
+                        tools:text="5 days" />
+                </LinearLayout>
+
+                <!-- Longest Streak -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/longest_streak"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body" />
+
+                    <TextView
+                        android:id="@+id/tvLongestStreak"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body.Bold"
+                        tools:text="14 days" />
+                </LinearLayout>
+
+                <!-- Average Runs Per Week -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/avg_runs_per_week"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body" />
+
+                    <TextView
+                        android:id="@+id/tvAvgRunsPerWeek"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body.Bold"
+                        tools:text="3.5 runs" />
+                </LinearLayout>
+
+                <!-- Most Active Day -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/most_active_day"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body" />
+
+                    <TextView
+                        android:id="@+id/tvMostActiveDay"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:textAppearance="@style/TextAppearance.RunTracker.Body.Bold"
+                        tools:text="Monday" />
+                </LinearLayout>
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- TRENDS SECTION -->
+        <TextView
+            android:id="@+id/tvTrendsSection"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/trends"
+            android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cardStreaks" />
+
+        <!-- Monthly Distance Chart -->
+        <TextView
+            android:id="@+id/tvMonthlyChart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/monthly_distance"
+            android:textAppearance="@style/TextAppearance.RunTracker.Body"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvTrendsSection" />
+
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/chartMonthly"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvMonthlyChart" />
+
+        <!-- Hourly Distance Chart -->
+        <TextView
+            android:id="@+id/tvHourlyChart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/hourly_distribution"
+            android:textAppearance="@style/TextAppearance.RunTracker.Body"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chartMonthly" />
+
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/chartHourly"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvHourlyChart" />
+
+        <!-- Weekday Distribution -->
+        <TextView
+            android:id="@+id/tvWeekdayChart"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/weekday_distribution"
+            android:textAppearance="@style/TextAppearance.RunTracker.Body"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/chartHourly" />
+
+        <com.github.mikephil.charting.charts.BarChart
+            android:id="@+id/chartWeekday"
+            android:layout_width="0dp"
+            android:layout_height="200dp"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvWeekdayChart" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

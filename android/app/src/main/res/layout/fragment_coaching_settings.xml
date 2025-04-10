@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    tools:context=".ui.fragments.CoachingSettingsFragment">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <TextView
+            android:id="@+id/tvCoachingSettingsTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/coaching_settings"
+            android:textAppearance="@style/TextAppearance.RunTracker.Title"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <!-- COACHING ENABLED SWITCH -->
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchCoachingEnabled"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:checked="true"
+            android:text="@string/enable_voice_coaching"
+            android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvCoachingSettingsTitle" />
+
+        <!-- COACHING TYPE SECTION -->
+        <TextView
+            android:id="@+id/tvCoachingTypeLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/coaching_type"
+            android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/switchCoachingEnabled" />
+
+        <RadioGroup
+            android:id="@+id/rgCoachingType"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvCoachingTypeLabel">
+
+            <RadioButton
+                android:id="@+id/rbBasicCoaching"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:padding="8dp"
+                android:text="@string/basic_coaching" />
+
+            <RadioButton
+                android:id="@+id/rbWorkoutCoaching"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/workout_coaching" />
+        </RadioGroup>
+
+        <!-- COACHING VOICE SECTION -->
+        <TextView
+            android:id="@+id/tvCoachingVoiceLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/coaching_voice"
+            android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/rgCoachingType" />
+
+        <RadioGroup
+            android:id="@+id/rgCoachingVoice"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvCoachingVoiceLabel">
+
+            <RadioButton
+                android:id="@+id/rbMaleVoice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:checked="true"
+                android:padding="8dp"
+                android:text="@string/male_voice" />
+
+            <RadioButton
+                android:id="@+id/rbFemaleVoice"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/female_voice" />
+        </RadioGroup>
+
+        <!-- COACHING FREQUENCY SECTION -->
+        <TextView
+            android:id="@+id/tvCoachingFrequencyLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/coaching_frequency"
+            android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/rgCoachingVoice" />
+
+        <RadioGroup
+            android:id="@+id/rgCoachingFrequency"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvCoachingFrequencyLabel">
+
+            <RadioButton
+                android:id="@+id/rbLowFrequency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/low_frequency" />
+
+            <RadioButton
+                android:id="@+id/rbMediumFrequency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:padding="8dp"
+                android:text="@string/medium_frequency" />
+
+            <RadioButton
+                android:id="@+id/rbHighFrequency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:padding="8dp"
+                android:text="@string/high_frequency" />
+        </RadioGroup>
+
+        <!-- MOTIVATIONAL FEEDBACK SECTION -->
+        <com.google.android.material.switchmaterial.SwitchMaterial
+            android:id="@+id/switchMotivational"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:checked="true"
+            android:text="@string/motivational_feedback"
+            android:textAppearance="@style/TextAppearance.RunTracker.Body"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/rgCoachingFrequency" />
+
+        <!-- COACHING PLAN SECTION -->
+        <TextView
+            android:id="@+id/tvCoachingPlanLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/coaching_plan"
+            android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+            android:textStyle="bold"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/switchMotivational" />
+
+        <Spinner
+            android:id="@+id/spinnerCoachingPlan"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:minHeight="48dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvCoachingPlanLabel" />
+
+        <!-- PLAN DETAILS CARD -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardPlanDetails"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            app:cardCornerRadius="8dp"
+            app:cardElevation="4dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/spinnerCoachingPlan">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <TextView
+                    android:id="@+id/tvSelectedPlanName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+                    tools:text="5K Beginner Plan" />
+
+                <TextView
+                    android:id="@+id/tvSelectedPlanDescription"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="@style/TextAppearance.RunTracker.Body"
+                    tools:text="An 8-week plan for beginners to complete their first 5K race" />
+
+                <TextView
+                    android:id="@+id/tvSelectedPlanDetails"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:textAppearance="@style/TextAppearance.RunTracker.Body"
+                    tools:text="Duration: 8 weeks | Difficulty: Beginner | Goal: 5K" />
+
+                <Button
+                    android:id="@+id/btnViewWorkouts"
+                    style="@style/Widget.MaterialComponents.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="8dp"
+                    android:text="@string/view_workouts" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- SAVE BUTTON -->
+        <Button
+            android:id="@+id/btnSaveCoachingSettings"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:text="@string/save_settings"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/cardPlanDetails" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</ScrollView>

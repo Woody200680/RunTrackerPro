@@ -1,19 +1,23 @@
 package com.runtracker.android.ui.fragments;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.content.SharedPreferences;
+import android.location.Location;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
+import android.os.IBinder;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
+import androidx.preference.PreferenceManager;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -24,154 +28,248 @@ import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.runtracker.android.R;
+import com.runtracker.android.data.CoachingManager;
+import com.runtracker.android.data.models.CoachingWorkout;
 import com.runtracker.android.data.models.Run;
-import com.runtracker.android.data.repositories.RunRepository;
+import com.runtracker.android.services.AudioCueManager;
 import com.runtracker.android.services.LocationTrackingService;
+import com.runtracker.android.services.VoiceCoach;
 import com.runtracker.android.ui.MainActivity;
+import com.runtracker.android.utils.Constants;
 import com.runtracker.android.utils.FormatUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
-import java.util.concurrent.TimeUnit;
 
 /**
- * Fragment for tracking runs
+ * Fragment for tracking runs and displaying real-time statistics
  */
-public class TrackFragment extends Fragment implements OnMapReadyCallback {
+public class TrackFragment extends Fragment implements OnMapReadyCallback, 
+        LocationTrackingService.LocationUpdateListener {
 
-    private TextView tvGpsStatus;
-    private TextView tvDuration;
     private TextView tvDistance;
+    private TextView tvDuration;
     private TextView tvPace;
     private TextView tvCalories;
-    private FloatingActionButton fabAction;
-    private FloatingActionButton fabStop;
-
-    private RunRepository runRepository;
-    private LocationTrackingService locationTrackingService;
-    private GoogleMap map;
-    private Run currentRun;
-    private boolean isTracking = false;
-    private Handler timerHandler;
-    private Runnable timerRunnable;
+    private FloatingActionButton fabStartPause;
+    private Button btnStop;
+    private TextView tvWorkoutInfo;
+    private TextView tvCoachingStatus;
     
+    private GoogleMap map;
+    private List<LatLng> routePoints = new ArrayList<>();
+    
+    // Services and managers
+    private LocationTrackingService trackingService;
+    private boolean isServiceBound = false;
+    private AudioCueManager audioCueManager;
+    private VoiceCoach voiceCoach;
+    private CoachingManager coachingManager;
+    
+    // Current run state
+    private boolean isTracking = false;
+    private boolean isPaused = false;
+    private Run currentRun;
+    
+    // Coaching state
+    private boolean isCoachingEnabled = true;
+    private int coachingType = Constants.COACHING_TYPE_BASIC;
+    private CoachingWorkout activeWorkout;
+    
+    // Service connection
+    private final ServiceConnection serviceConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            LocationTrackingService.LocalBinder binder = 
+                    (LocationTrackingService.LocalBinder) service;
+            trackingService = binder.getService();
+            isServiceBound = true;
+            
+            // Register as a listener for location updates
+            trackingService.addLocationUpdateListener(TrackFragment.this);
+            
+            // Check if service is already tracking
+            if (trackingService.isTracking()) {
+                isTracking = true;
+                isPaused = trackingService.isPaused();
+                currentRun = trackingService.getCurrentRun();
+                updateUI();
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            trackingService = null;
+            isServiceBound = false;
+        }
+    };
+
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_track, container, false);
     }
-    
+
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
         
-        // Initialize views
-        tvGpsStatus = view.findViewById(R.id.tvGpsStatus);
-        tvDuration = view.findViewById(R.id.tvDuration);
-        tvDistance = view.findViewById(R.id.tvDistance);
-        tvPace = view.findViewById(R.id.tvPace);
-        tvCalories = view.findViewById(R.id.tvCalories);
-        fabAction = view.findViewById(R.id.fabAction);
-        fabStop = view.findViewById(R.id.fabStop);
+        // Initialize UI elements
+        initUI(view);
         
         // Get dependencies
-        runRepository = ((MainActivity) requireActivity()).getRunRepository();
-        locationTrackingService = new LocationTrackingService(requireContext(), this::onLocationUpdate);
+        MainActivity activity = (MainActivity) requireActivity();
+        audioCueManager = activity.getAudioCueManager();
+        voiceCoach = activity.getVoiceCoach();
+        coachingManager = activity.getCoachingManager();
         
-        // Set up map
+        // Load coaching settings
+        loadCoachingSettings();
+        
+        // Initialize map
         SupportMapFragment mapFragment = (SupportMapFragment) getChildFragmentManager()
                 .findFragmentById(R.id.mapView);
         if (mapFragment != null) {
             mapFragment.getMapAsync(this);
         }
         
-        // Set up timer handler
-        timerHandler = new Handler(Looper.getMainLooper());
-        timerRunnable = new Runnable() {
-            @Override
-            public void run() {
-                updateTrackingInfo();
-                timerHandler.postDelayed(this, 1000);
-            }
-        };
-        
         // Set up button listeners
-        fabAction.setOnClickListener(v -> toggleTracking());
-        fabStop.setOnClickListener(v -> stopRun());
+        setupButtonListeners();
         
-        // Check if there's a run in progress
-        currentRun = runRepository.getCurrentRun();
+        // Set initial UI state
         updateUI();
     }
     
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (isTracking) {
-            timerHandler.post(timerRunnable);
-        }
-        
-        currentRun = runRepository.getCurrentRun();
-        updateUI();
+    /**
+     * Initialize UI elements
+     */
+    private void initUI(View view) {
+        tvDistance = view.findViewById(R.id.tvDistance);
+        tvDuration = view.findViewById(R.id.tvDuration);
+        tvPace = view.findViewById(R.id.tvPace);
+        tvCalories = view.findViewById(R.id.tvCalories);
+        fabStartPause = view.findViewById(R.id.fabStartPause);
+        btnStop = view.findViewById(R.id.btnStop);
+        tvWorkoutInfo = view.findViewById(R.id.tvWorkoutInfo);
+        tvCoachingStatus = view.findViewById(R.id.tvCoachingStatus);
     }
     
-    @Override
-    public void onPause() {
-        super.onPause();
-        timerHandler.removeCallbacks(timerRunnable);
-    }
-    
-    @Override
-    public void onMapReady(@NonNull GoogleMap googleMap) {
-        map = googleMap;
+    /**
+     * Load coaching settings from preferences
+     */
+    private void loadCoachingSettings() {
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(requireContext());
+        isCoachingEnabled = preferences.getBoolean(Constants.PREF_COACHING_ENABLED, true);
+        coachingType = preferences.getInt(Constants.PREF_COACHING_TYPE, Constants.COACHING_TYPE_BASIC);
         
-        if (ContextCompat.checkSelfPermission(requireContext(), 
-                Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            map.setMyLocationEnabled(true);
-            map.getUiSettings().setMyLocationButtonEnabled(true);
+        // If workout coaching is enabled, get the active workout
+        if (coachingType == Constants.COACHING_TYPE_WORKOUT) {
+            String activePlanId = preferences.getString(Constants.PREF_ACTIVE_PLAN_ID, null);
+            if (activePlanId != null) {
+                // Get next scheduled workout
+                activeWorkout = coachingManager.getNextScheduledWorkout();
+                
+                if (activeWorkout != null) {
+                    updateWorkoutInfo();
+                }
+            }
         }
         
-        // Draw route if we have a current run with location points
-        if (currentRun != null && !currentRun.getLocationPoints().isEmpty()) {
-            drawRoute();
+        // Update coaching status text
+        updateCoachingStatus();
+    }
+    
+    /**
+     * Update coaching status text
+     */
+    private void updateCoachingStatus() {
+        if (!isCoachingEnabled) {
+            tvCoachingStatus.setText(R.string.coaching_disabled);
+            tvCoachingStatus.setVisibility(View.VISIBLE);
+            return;
+        }
+        
+        if (coachingType == Constants.COACHING_TYPE_BASIC) {
+            tvCoachingStatus.setText(R.string.basic_coaching_enabled);
+            tvCoachingStatus.setVisibility(View.VISIBLE);
+        } else if (coachingType == Constants.COACHING_TYPE_WORKOUT && activeWorkout != null) {
+            tvCoachingStatus.setText(R.string.workout_coaching_enabled);
+            tvCoachingStatus.setVisibility(View.VISIBLE);
+        } else {
+            tvCoachingStatus.setVisibility(View.GONE);
         }
     }
     
     /**
-     * Toggle tracking (start, pause, resume)
+     * Update workout information display
      */
-    private void toggleTracking() {
-        if (currentRun == null) {
-            // Start new run
-            startRun();
-        } else if (currentRun.isPaused()) {
-            // Resume run
-            resumeRun();
+    private void updateWorkoutInfo() {
+        if (activeWorkout != null) {
+            String workoutName = activeWorkout.getName();
+            String workoutType = CoachingWorkout.getTypeName(activeWorkout.getType());
+            double estimatedDistance = activeWorkout.getEstimatedDistance();
+            long totalDuration = activeWorkout.getTotalDuration();
+            
+            StringBuilder info = new StringBuilder(workoutName)
+                    .append(" (").append(workoutType).append(")\n")
+                    .append(getString(R.string.estimated_distance, 
+                            FormatUtils.formatDistance(estimatedDistance))).append(" | ")
+                    .append(getString(R.string.estimated_duration, 
+                            FormatUtils.formatDuration(totalDuration)));
+            
+            tvWorkoutInfo.setText(info);
+            tvWorkoutInfo.setVisibility(View.VISIBLE);
         } else {
-            // Pause run
-            pauseRun();
+            tvWorkoutInfo.setVisibility(View.GONE);
         }
+    }
+    
+    /**
+     * Set up button click listeners
+     */
+    private void setupButtonListeners() {
+        // Start/Pause button
+        fabStartPause.setOnClickListener(v -> {
+            if (!isTracking) {
+                startRun();
+            } else if (isPaused) {
+                resumeRun();
+            } else {
+                pauseRun();
+            }
+        });
+        
+        // Stop button
+        btnStop.setOnClickListener(v -> {
+            stopRun();
+        });
     }
     
     /**
      * Start a new run
      */
     private void startRun() {
-        if (ContextCompat.checkSelfPermission(requireContext(), 
-                Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            return;
+        // Start location tracking service
+        Intent intent = new Intent(requireContext(), LocationTrackingService.class);
+        intent.setAction(LocationTrackingService.ACTION_START);
+        requireContext().startService(intent);
+        
+        // Bind to service
+        if (!isServiceBound) {
+            requireContext().bindService(
+                    new Intent(requireContext(), LocationTrackingService.class),
+                    serviceConnection,
+                    Context.BIND_AUTO_CREATE);
         }
         
-        currentRun = runRepository.startRun();
+        // Update state
         isTracking = true;
+        isPaused = false;
         
-        // Start tracking location
-        locationTrackingService.startTracking();
+        // Clear route points
+        routePoints.clear();
         
-        // Start timer
-        timerHandler.post(timerRunnable);
-        
+        // Update UI
         updateUI();
     }
     
@@ -179,199 +277,204 @@ public class TrackFragment extends Fragment implements OnMapReadyCallback {
      * Pause the current run
      */
     private void pauseRun() {
-        if (currentRun != null && !currentRun.isPaused()) {
-            runRepository.pauseRun();
+        if (isServiceBound && trackingService != null) {
+            // Pause tracking
+            Intent intent = new Intent(requireContext(), LocationTrackingService.class);
+            intent.setAction(LocationTrackingService.ACTION_PAUSE);
+            requireContext().startService(intent);
             
-            // Stop tracking location
-            locationTrackingService.stopTracking();
+            // Update state
+            isPaused = true;
             
+            // Update UI
             updateUI();
         }
     }
     
     /**
-     * Resume the current run
+     * Resume the paused run
      */
     private void resumeRun() {
-        if (currentRun != null && currentRun.isPaused()) {
-            runRepository.resumeRun();
+        if (isServiceBound && trackingService != null) {
+            // Resume tracking
+            Intent intent = new Intent(requireContext(), LocationTrackingService.class);
+            intent.setAction(LocationTrackingService.ACTION_RESUME);
+            requireContext().startService(intent);
             
-            // Start tracking location
-            locationTrackingService.startTracking();
+            // Update state
+            isPaused = false;
             
+            // Update UI
             updateUI();
         }
     }
     
     /**
-     * Stop and save the current run
+     * Stop the current run
      */
     private void stopRun() {
-        if (currentRun != null) {
-            // Calculate calories (simplified formula: 60 calories per km)
-            int estimatedCalories = (int) (currentRun.getTotalDistance() * 60);
+        if (isServiceBound && trackingService != null) {
+            // Stop tracking
+            Intent intent = new Intent(requireContext(), LocationTrackingService.class);
+            intent.setAction(LocationTrackingService.ACTION_STOP);
+            requireContext().startService(intent);
             
-            // Stop run
-            runRepository.stopRun(estimatedCalories);
-            
-            // Stop tracking location
-            locationTrackingService.stopTracking();
-            
-            // Stop timer
-            timerHandler.removeCallbacks(timerRunnable);
+            // Update state
             isTracking = false;
-            
-            // Reset UI
+            isPaused = false;
             currentRun = null;
+            
+            // Clear route
+            routePoints.clear();
             if (map != null) {
                 map.clear();
             }
             
+            // Update UI
             updateUI();
         }
     }
     
     /**
-     * Update the UI based on current tracking state
+     * Update the UI based on current state
      */
     private void updateUI() {
-        if (currentRun == null) {
-            // No run in progress
-            fabAction.setImageResource(R.drawable.ic_run);
-            fabAction.setContentDescription(getString(R.string.start_run));
-            fabStop.setVisibility(View.GONE);
-            tvGpsStatus.setText(R.string.tracking_disabled);
-            
-            // Reset metrics
-            tvDuration.setText("00:00:00");
-            tvDistance.setText("0.00 km");
-            tvPace.setText("0:00");
-            tvCalories.setText("0 kcal");
-            
-        } else if (currentRun.isPaused()) {
-            // Run is paused
-            fabAction.setImageResource(R.drawable.ic_run);
-            fabAction.setContentDescription(getString(R.string.resume_run));
-            fabStop.setVisibility(View.VISIBLE);
-            tvGpsStatus.setText(R.string.tracking_disabled);
-            
-            // Update metrics
-            updateTrackingInfo();
-            
-        } else {
-            // Run is active
-            fabAction.setImageResource(R.drawable.ic_pause);
-            fabAction.setContentDescription(getString(R.string.pause_run));
-            fabStop.setVisibility(View.VISIBLE);
-            tvGpsStatus.setText(R.string.tracking_enabled);
-            
-            // Update metrics
-            updateTrackingInfo();
-        }
-    }
-    
-    /**
-     * Update tracking information (duration, distance, pace, calories)
-     */
-    private void updateTrackingInfo() {
-        if (currentRun != null) {
-            // Update duration
-            long duration = currentRun.getActiveDuration();
-            String formattedDuration = String.format(Locale.getDefault(), "%02d:%02d:%02d",
-                    TimeUnit.MILLISECONDS.toHours(duration),
-                    TimeUnit.MILLISECONDS.toMinutes(duration) % 60,
-                    TimeUnit.MILLISECONDS.toSeconds(duration) % 60);
-            tvDuration.setText(formattedDuration);
-            
-            // Update distance
-            double distance = currentRun.getTotalDistance();
-            String formattedDistance = String.format(Locale.getDefault(), "%.2f km", distance);
-            tvDistance.setText(formattedDistance);
-            
-            // Update pace
-            double pace = currentRun.getPace();
-            if (pace > 0) {
-                int paceMinutes = (int) pace;
-                int paceSeconds = (int) ((pace - paceMinutes) * 60);
-                String formattedPace = String.format(Locale.getDefault(), "%d:%02d", 
-                        paceMinutes, paceSeconds);
-                tvPace.setText(formattedPace);
+        if (isTracking) {
+            // Update button appearances
+            if (isPaused) {
+                fabStartPause.setImageResource(R.drawable.ic_play);
+                fabStartPause.setContentDescription(getString(R.string.resume_run));
             } else {
-                tvPace.setText("0:00");
+                fabStartPause.setImageResource(R.drawable.ic_pause);
+                fabStartPause.setContentDescription(getString(R.string.pause_run));
             }
             
-            // Update calories (simplified formula: 60 calories per km)
-            int estimatedCalories = (int) (distance * 60);
-            tvCalories.setText(String.format(Locale.getDefault(), "%d kcal", estimatedCalories));
-        }
-    }
-    
-    /**
-     * Handle location updates from the tracking service
-     * @param latitude Latitude
-     * @param longitude Longitude
-     */
-    private void onLocationUpdate(double latitude, double longitude) {
-        if (currentRun != null && !currentRun.isPaused()) {
-            // Add location point to run
-            runRepository.addLocationPoint(latitude, longitude);
+            // Show stop button
+            btnStop.setVisibility(View.VISIBLE);
             
-            // Update map
-            updateMap(latitude, longitude);
+            // Update stats if available
+            if (currentRun != null) {
+                tvDistance.setText(FormatUtils.formatDistance(currentRun.getTotalDistance()));
+                tvDuration.setText(FormatUtils.formatDuration(currentRun.getActiveDuration()));
+                
+                double pace = currentRun.getPace();
+                if (pace > 0) {
+                    tvPace.setText(FormatUtils.formatPace(pace));
+                } else {
+                    tvPace.setText(R.string.pace_placeholder);
+                }
+                
+                tvCalories.setText(FormatUtils.formatCalories(currentRun.getCaloriesBurned()));
+            }
+        } else {
+            // Reset to initial state
+            fabStartPause.setImageResource(R.drawable.ic_play);
+            fabStartPause.setContentDescription(getString(R.string.start_run));
+            btnStop.setVisibility(View.GONE);
+            
+            // Reset stats
+            tvDistance.setText(R.string.distance_placeholder);
+            tvDuration.setText(R.string.duration_placeholder);
+            tvPace.setText(R.string.pace_placeholder);
+            tvCalories.setText(R.string.calories_placeholder);
         }
     }
     
-    /**
-     * Update map with new location
-     * @param latitude Latitude
-     * @param longitude Longitude
-     */
-    private void updateMap(double latitude, double longitude) {
+    @Override
+    public void onMapReady(@NonNull GoogleMap googleMap) {
+        map = googleMap;
+        
+        // Set initial camera position
+        map.moveCamera(CameraUpdateFactory.zoomTo(15));
+        
+        // If already tracking, redraw route
+        if (isTracking && !routePoints.isEmpty()) {
+            drawRoute();
+        }
+    }
+    
+    @Override
+    public void onLocationUpdate(Location location, Run run) {
+        // Update current run
+        currentRun = run;
+        
+        // Add point to route
+        LatLng point = new LatLng(location.getLatitude(), location.getLongitude());
+        routePoints.add(point);
+        
+        // Update map
         if (map != null) {
-            LatLng latLng = new LatLng(latitude, longitude);
-            
-            // Move camera
-            map.animateCamera(CameraUpdateFactory.newLatLngZoom(latLng, 17));
+            // If this is the first point, move camera
+            if (routePoints.size() == 1) {
+                map.moveCamera(CameraUpdateFactory.newLatLngZoom(point, 15));
+            } else {
+                // Otherwise just update the camera position
+                map.animateCamera(CameraUpdateFactory.newLatLng(point));
+            }
             
             // Draw route
             drawRoute();
         }
+        
+        // Update UI
+        updateUI();
     }
     
     /**
      * Draw the route on the map
      */
     private void drawRoute() {
-        if (map != null && currentRun != null && !currentRun.getLocationPoints().isEmpty()) {
-            // Clear previous polylines
-            map.clear();
-            
-            // Get location points
-            List<Run.LocationPoint> points = currentRun.getLocationPoints();
-            List<LatLng> routePoints = new ArrayList<>();
-            
-            for (Run.LocationPoint point : points) {
-                routePoints.add(new LatLng(point.getLatitude(), point.getLongitude()));
+        if (map == null || routePoints.isEmpty()) {
+            return;
+        }
+        
+        // Create polyline options
+        PolylineOptions polylineOptions = new PolylineOptions()
+                .addAll(routePoints)
+                .color(getResources().getColor(R.color.primary, null))
+                .width(10);
+        
+        // Clear previous polylines and add new one
+        map.clear();
+        map.addPolyline(polylineOptions);
+        
+        // If there are multiple points, zoom to fit the route
+        if (routePoints.size() > 1) {
+            LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
+            for (LatLng point : routePoints) {
+                boundsBuilder.include(point);
             }
             
-            // Draw polyline
-            PolylineOptions polylineOptions = new PolylineOptions()
-                    .addAll(routePoints)
-                    .color(ContextCompat.getColor(requireContext(), R.color.primary))
-                    .width(12);
-            
-            map.addPolyline(polylineOptions);
-            
-            // Zoom to fit route
-            if (routePoints.size() > 1) {
-                LatLngBounds.Builder boundsBuilder = new LatLngBounds.Builder();
-                for (LatLng point : routePoints) {
-                    boundsBuilder.include(point);
-                }
-                LatLngBounds bounds = boundsBuilder.build();
-                
-                map.animateCamera(CameraUpdateFactory.newLatLngBounds(bounds, 100));
+            // Ensure we don't zoom out too far
+            int padding = 100; // pixels
+            map.animateCamera(CameraUpdateFactory.newLatLngBounds(boundsBuilder.build(), padding));
+        }
+    }
+    
+    @Override
+    public void onStart() {
+        super.onStart();
+        
+        // Bind to service if it's running
+        if (!isServiceBound) {
+            requireContext().bindService(
+                    new Intent(requireContext(), LocationTrackingService.class),
+                    serviceConnection,
+                    Context.BIND_AUTO_CREATE);
+        }
+    }
+    
+    @Override
+    public void onStop() {
+        super.onStop();
+        
+        // Unbind from service
+        if (isServiceBound) {
+            if (trackingService != null) {
+                trackingService.removeLocationUpdateListener(this);
             }
+            requireContext().unbindService(serviceConnection);
+            isServiceBound = false;
         }
     }
 }

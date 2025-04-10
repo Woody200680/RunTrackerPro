@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="4dp"
+    android:layout_marginVertical="4dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="2dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/ivAchievementIcon"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:contentDescription="@string/achievement_icon"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/ic_achievement_distance" />
+
+        <TextView
+            android:id="@+id/tvAchievementTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:textAppearance="@style/TextAppearance.RunTracker.Subtitle"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/ivAchievementIcon"
+            app:layout_constraintTop_toTopOf="@+id/ivAchievementIcon"
+            tools:text="Distance Champion" />
+
+        <TextView
+            android:id="@+id/tvAchievementDescription"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="@style/TextAppearance.RunTracker.Body"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/tvAchievementTitle"
+            app:layout_constraintTop_toBottomOf="@+id/tvAchievementTitle"
+            tools:text="Run a total of 100 kilometers" />
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressAchievement"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@+id/tvAchievementTitle"
+            app:layout_constraintTop_toBottomOf="@+id/tvAchievementDescription"
+            app:trackCornerRadius="4dp"
+            app:trackThickness="4dp" />
+
+        <TextView
+            android:id="@+id/tvAchievementProgress"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="@style/TextAppearance.RunTracker.Caption"
+            app:layout_constraintEnd_toEndOf="@+id/progressAchievement"
+            app:layout_constraintTop_toBottomOf="@+id/progressAchievement"
+            tools:text="42/100" />
+
+        <TextView
+            android:id="@+id/tvAchievementDate"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textAppearance="@style/TextAppearance.RunTracker.Caption"
+            app:layout_constraintStart_toStartOf="@+id/progressAchievement"
+            app:layout_constraintTop_toBottomOf="@+id/progressAchievement"
+            tools:text="Unlocked on May 12, 2023" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</com.google.android.material.card.MaterialCardView>

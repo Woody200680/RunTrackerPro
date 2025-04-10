@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Coaching Settings -->
+    <string name="coaching_settings">Voice Coaching Settings</string>
+    <string name="enable_voice_coaching">Enable Voice Coaching</string>
+    <string name="coaching_type">Coaching Type</string>
+    <string name="basic_coaching">Basic Coaching (pace and distance updates)</string>
+    <string name="workout_coaching">Structured Workout Coaching</string>
+    <string name="coaching_voice">Voice</string>
+    <string name="male_voice">Male</string>
+    <string name="female_voice">Female</string>
+    <string name="coaching_frequency">Update Frequency</string>
+    <string name="low_frequency">Low (less frequent updates)</string>
+    <string name="medium_frequency">Medium (regular updates)</string>
+    <string name="high_frequency">High (frequent updates)</string>
+    <string name="motivational_feedback">Include motivational feedback</string>
+    <string name="coaching_plan">Coaching Plan</string>
+    <string name="select_a_plan">Select a plan</string>
+    <string name="no_plan_selected">No plan selected</string>
+    <string name="view_workouts">View Workouts</string>
+    <string name="plan_details_format">Duration: %1$d weeks | Difficulty: %2$s | Goal: %3$s</string>
+    
+    <!-- Workout List -->
+    <string name="workouts">Workouts</string>
+    <string name="week_format">Week %d</string>
+    <string name="workout_details_format">%1$s: %2$s min, ~%3$s</string>
+    <string name="day_format">Day %d</string>
+    <string name="no_workouts_found">No workouts found for this plan</string>
+    
+    <!-- Workout Details -->
+    <string name="workout_details">Workout Details</string>
+    <string name="start_workout">Start Workout</string>
+    <string name="segments">Segments</string>
+    <string name="duration_format">Duration: %s</string>
+    <string name="target_pace_format">Target Pace: %s</string>
+    <string name="intensity_format">Intensity: %s</string>
+    <string name="repeats_format">Repeats: %d</string>
+    <string name="estimated_distance">Estimated Distance: %s</string>
+    <string name="estimated_duration">Estimated Duration: %s</string>
+    
+    <!-- Voice Coach Feedback -->
+    <string name="coaching_started">Voice coaching started</string>
+    <string name="coaching_stopped">Voice coaching stopped</string>
+    <string name="workout_complete">Workout complete</string>
+    <string name="segment_complete">Segment complete</string>
+    <string name="days_value">%d days</string>
+    <string name="days_count">%d days</string>
+    <string name="runs">runs</string>
+    <string name="not_available">N/A</string>
+    <string name="not_enough_data">Not enough data</string>
+    <string name="progress_format">%1$s / %2$s</string>
+    <string name="unlocked_on">Unlocked on %s</string>
+</resources>

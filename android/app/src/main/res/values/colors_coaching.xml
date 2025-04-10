@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Achievement Colors -->
+    <color name="achievement_bronze">#CD7F32</color>
+    <color name="achievement_silver">#C0C0C0</color>
+    <color name="achievement_gold">#FFD700</color>
+    <color name="achievement_unlocked_bg">#E8F5E9</color>
+    <color name="achievement_locked_bg">#FFFFFF</color>
+    
+    <!-- Workout Segment Colors -->
+    <color name="segment_warmup">#7986CB</color>
+    <color name="segment_active">#EF5350</color>
+    <color name="segment_recovery">#66BB6A</color>
+    <color name="segment_rest">#81D4FA</color>
+    <color name="segment_cooldown">#9575CD</color>
+    
+    <!-- Intensity Colors -->
+    <color name="intensity_easy">#4CAF50</color>
+    <color name="intensity_moderate">#FFA000</color>
+    <color name="intensity_hard">#F44336</color>
+    <color name="intensity_max">#7B1FA2</color>
+</resources>
