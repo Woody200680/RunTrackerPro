@@ -4,6 +4,9 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
 
+import androidx.lifecycle.LiveData;
+import androidx.lifecycle.MutableLiveData;
+
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.runtracker.android.data.models.Run;
@@ -11,92 +14,215 @@ import com.runtracker.android.data.models.Run;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
 /**
- * Repository class to handle data operations for Run objects
+ * Repository class for managing Run data
  */
 public class RunRepository {
     private static final String TAG = "RunRepository";
-    private static final String PREF_NAME = "run_tracker_prefs";
+    private static final String PREFS_NAME = "run_tracker_prefs";
     private static final String KEY_RUNS = "runs";
+    private static final String KEY_CURRENT_RUN = "current_run";
     
-    private final SharedPreferences sharedPreferences;
+    private static RunRepository instance;
+    
+    private final SharedPreferences prefs;
     private final Gson gson;
     
-    public RunRepository(Context context) {
-        this.sharedPreferences = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE);
-        this.gson = new Gson();
+    private final MutableLiveData<List<Run>> allRuns = new MutableLiveData<>();
+    private final MutableLiveData<Run> currentRun = new MutableLiveData<>();
+    
+    private RunRepository(Context context) {
+        prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        gson = new Gson();
+        
+        // Load saved runs from SharedPreferences
+        loadRuns();
+        loadCurrentRun();
     }
     
     /**
-     * Get all runs, sorted by most recent first
+     * Get the singleton instance of RunRepository
      */
-    public List<Run> getAllRuns() {
-        String runsJson = sharedPreferences.getString(KEY_RUNS, null);
-        if (runsJson == null) {
-            return new ArrayList<>();
+    public static synchronized RunRepository getInstance(Context context) {
+        if (instance == null) {
+            instance = new RunRepository(context.getApplicationContext());
+        }
+        return instance;
+    }
+    
+    /**
+     * Load runs from SharedPreferences
+     */
+    private void loadRuns() {
+        String runsJson = prefs.getString(KEY_RUNS, null);
+        List<Run> runs = new ArrayList<>();
+        
+        if (runsJson != null) {
+            try {
+                Type type = new TypeToken<List<Run>>() {}.getType();
+                runs = gson.fromJson(runsJson, type);
+            } catch (Exception e) {
+                Log.e(TAG, "Error loading runs: " + e.getMessage());
+            }
         }
         
-        Type type = new TypeToken<List<Run>>() {}.getType();
-        List<Run> runs = gson.fromJson(runsJson, type);
-        
-        // Sort by most recent first
-        Collections.sort(runs, (run1, run2) -> {
-            if (run1.getStartTime() == null || run2.getStartTime() == null) {
-                return 0;
-            }
-            return run2.getStartTime().compareTo(run1.getStartTime());
-        });
-        
-        return runs;
+        allRuns.setValue(runs);
     }
     
     /**
-     * Get a specific run by ID
+     * Load current run from SharedPreferences
+     */
+    private void loadCurrentRun() {
+        String currentRunJson = prefs.getString(KEY_CURRENT_RUN, null);
+        
+        if (currentRunJson != null) {
+            try {
+                Run run = gson.fromJson(currentRunJson, Run.class);
+                currentRun.setValue(run);
+            } catch (Exception e) {
+                Log.e(TAG, "Error loading current run: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Save runs to SharedPreferences
+     */
+    private void saveRuns() {
+        List<Run> runs = allRuns.getValue();
+        
+        if (runs != null) {
+            try {
+                String runsJson = gson.toJson(runs);
+                prefs.edit().putString(KEY_RUNS, runsJson).apply();
+            } catch (Exception e) {
+                Log.e(TAG, "Error saving runs: " + e.getMessage());
+            }
+        }
+    }
+    
+    /**
+     * Save current run to SharedPreferences
+     */
+    private void saveCurrentRun() {
+        Run run = currentRun.getValue();
+        
+        if (run != null) {
+            try {
+                String currentRunJson = gson.toJson(run);
+                prefs.edit().putString(KEY_CURRENT_RUN, currentRunJson).apply();
+            } catch (Exception e) {
+                Log.e(TAG, "Error saving current run: " + e.getMessage());
+            }
+        } else {
+            // Clear current run
+            prefs.edit().remove(KEY_CURRENT_RUN).apply();
+        }
+    }
+    
+    /**
+     * Get all saved runs as LiveData
+     */
+    public LiveData<List<Run>> getAllRuns() {
+        return allRuns;
+    }
+    
+    /**
+     * Get the current active run as LiveData
+     */
+    public LiveData<Run> getCurrentRun() {
+        return currentRun;
+    }
+    
+    /**
+     * Get a run by ID
      */
     public Run getRunById(String id) {
-        List<Run> runs = getAllRuns();
-        for (Run run : runs) {
-            if (run.getId().equals(id)) {
-                return run;
+        List<Run> runs = allRuns.getValue();
+        
+        if (runs != null) {
+            for (Run run : runs) {
+                if (run.getId().equals(id)) {
+                    return run;
+                }
             }
         }
+        
         return null;
     }
     
     /**
-     * Insert a new run
+     * Start a new run
      */
-    public void insertRun(Run run) {
-        List<Run> runs = getAllRuns();
-        
-        // Check if run with same ID already exists
-        for (int i = 0; i < runs.size(); i++) {
-            if (runs.get(i).getId().equals(run.getId())) {
-                runs.set(i, run);
-                saveRuns(runs);
-                return;
-            }
-        }
-        
-        // Add new run
-        runs.add(run);
-        saveRuns(runs);
+    public void startRun() {
+        Run run = new Run();
+        currentRun.setValue(run);
+        saveCurrentRun();
     }
     
     /**
-     * Update an existing run
+     * Update location data for the current run
      */
-    public void updateRun(Run run) {
-        List<Run> runs = getAllRuns();
-        for (int i = 0; i < runs.size(); i++) {
-            if (runs.get(i).getId().equals(run.getId())) {
-                runs.set(i, run);
-                saveRuns(runs);
-                return;
+    public void updateLocation(double latitude, double longitude) {
+        Run run = currentRun.getValue();
+        
+        if (run != null && run.getStatus() == Run.RunStatus.ACTIVE) {
+            run.addLocationPoint(latitude, longitude);
+            currentRun.setValue(run);
+            saveCurrentRun();
+        }
+    }
+    
+    /**
+     * Pause the current run
+     */
+    public void pauseRun() {
+        Run run = currentRun.getValue();
+        
+        if (run != null && run.getStatus() == Run.RunStatus.ACTIVE) {
+            run.pause();
+            currentRun.setValue(run);
+            saveCurrentRun();
+        }
+    }
+    
+    /**
+     * Resume the current run
+     */
+    public void resumeRun() {
+        Run run = currentRun.getValue();
+        
+        if (run != null && run.getStatus() == Run.RunStatus.PAUSED) {
+            run.resume();
+            currentRun.setValue(run);
+            saveCurrentRun();
+        }
+    }
+    
+    /**
+     * Stop and save the current run
+     */
+    public void stopRun() {
+        Run run = currentRun.getValue();
+        
+        if (run != null && run.getStatus() != Run.RunStatus.COMPLETED) {
+            run.complete();
+            
+            // Add to completed runs list
+            List<Run> runs = allRuns.getValue();
+            if (runs == null) {
+                runs = new ArrayList<>();
             }
+            runs.add(run);
+            
+            // Update and save
+            allRuns.setValue(runs);
+            currentRun.setValue(null);
+            
+            saveRuns();
+            saveCurrentRun();
         }
     }
     
@@ -104,46 +230,58 @@ public class RunRepository {
      * Delete a run by ID
      */
     public void deleteRun(String id) {
-        List<Run> runs = getAllRuns();
-        for (int i = 0; i < runs.size(); i++) {
-            if (runs.get(i).getId().equals(id)) {
-                runs.remove(i);
-                saveRuns(runs);
-                return;
+        List<Run> runs = allRuns.getValue();
+        
+        if (runs != null) {
+            List<Run> updatedRuns = new ArrayList<>();
+            
+            for (Run run : runs) {
+                if (!run.getId().equals(id)) {
+                    updatedRuns.add(run);
+                }
             }
+            
+            allRuns.setValue(updatedRuns);
+            saveRuns();
         }
     }
     
     /**
-     * Get total statistics
-     * @return Array with [totalDistance (meters), totalDuration (seconds), averagePace (min/km), totalCalories]
+     * Get total statistics for all runs
      */
-    public float[] getStatistics() {
-        List<Run> runs = getAllRuns();
-        float totalDistance = 0;
-        int totalDuration = 0;
-        int totalCalories = 0;
+    public RunStatistics getRunStatistics() {
+        List<Run> runs = allRuns.getValue();
+        RunStatistics stats = new RunStatistics();
         
-        for (Run run : runs) {
-            totalDistance += run.getDistanceInMeters();
-            totalDuration += run.getDurationInSeconds();
-            totalCalories += run.getCaloriesBurned();
+        if (runs != null && !runs.isEmpty()) {
+            double totalDistance = 0;
+            long totalDuration = 0;
+            int totalCalories = 0;
+            
+            for (Run run : runs) {
+                totalDistance += run.getTotalDistance();
+                totalDuration += run.getTotalDuration();
+                totalCalories += run.getCaloriesBurned();
+            }
+            
+            stats.totalRuns = runs.size();
+            stats.totalDistance = totalDistance;
+            stats.totalDuration = totalDuration;
+            stats.totalCalories = totalCalories;
+            stats.averagePace = totalDistance > 0 ? (totalDuration / 60.0) / totalDistance : 0;
         }
         
-        // Calculate average pace (min/km)
-        float averagePace = 0;
-        if (totalDistance > 0) {
-            averagePace = (totalDuration / 60f) / (totalDistance / 1000f);
-        }
-        
-        return new float[]{totalDistance, totalDuration, averagePace, totalCalories};
+        return stats;
     }
     
     /**
-     * Save runs to SharedPreferences
+     * Class to hold run statistics
      */
-    private void saveRuns(List<Run> runs) {
-        String runsJson = gson.toJson(runs);
-        sharedPreferences.edit().putString(KEY_RUNS, runsJson).apply();
+    public static class RunStatistics {
+        public int totalRuns = 0;
+        public double totalDistance = 0; // km
+        public long totalDuration = 0; // seconds
+        public double averagePace = 0; // min/km
+        public int totalCalories = 0;
     }
 }

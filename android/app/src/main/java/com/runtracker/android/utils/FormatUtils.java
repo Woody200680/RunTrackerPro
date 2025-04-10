@@ -6,77 +6,87 @@ import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Utility class for formatting various data types for display
+ * Utility class for formatting run data
  */
 public class FormatUtils {
     
-    private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("MMM d, yyyy", Locale.getDefault());
-    private static final SimpleDateFormat DATE_TIME_FORMAT = new SimpleDateFormat("MMM d, yyyy • h:mm a", Locale.getDefault());
-    
     /**
-     * Format a distance in meters to a readable string in kilometers
+     * Format distance in kilometers
+     * @param distanceKm Distance in kilometers
+     * @return Formatted distance string (e.g., "5.23 km")
      */
-    public static String formatDistance(float distanceInMeters) {
-        float distanceKm = distanceInMeters / 1000f;
+    public static String formatDistance(double distanceKm) {
         return String.format(Locale.getDefault(), "%.2f km", distanceKm);
     }
     
     /**
-     * Format duration in seconds to readable string
+     * Format pace in minutes per kilometer
+     * @param paceMinPerKm Pace in minutes per kilometer
+     * @return Formatted pace string (e.g., "5:30 min/km")
      */
-    public static String formatDuration(int durationSeconds) {
-        int hours = durationSeconds / 3600;
-        int minutes = (durationSeconds % 3600) / 60;
-        int seconds = durationSeconds % 60;
-        
-        if (hours > 0) {
-            return String.format(Locale.getDefault(), "%d:%02d:%02d", hours, minutes, seconds);
-        } else {
-            return String.format(Locale.getDefault(), "%02d:%02d", minutes, seconds);
+    public static String formatPace(double paceMinPerKm) {
+        if (paceMinPerKm <= 0) {
+            return "0:00 min/km";
         }
-    }
-    
-    /**
-     * Format pace (minutes per kilometer) as readable string
-     */
-    public static String formatPace(float paceMinPerKm) {
-        int paceMinutes = (int) paceMinPerKm;
-        int paceSeconds = (int) ((paceMinPerKm - paceMinutes) * 60);
         
-        return String.format(Locale.getDefault(), "%d:%02d /km", paceMinutes, paceSeconds);
+        int minutes = (int) paceMinPerKm;
+        int seconds = (int) ((paceMinPerKm - minutes) * 60);
+        
+        return String.format(Locale.getDefault(), "%d:%02d min/km", minutes, seconds);
     }
     
     /**
-     * Format calories as readable string
+     * Format duration in seconds
+     * @param durationSeconds Duration in seconds
+     * @return Formatted duration string (e.g., "01:25:30")
+     */
+    public static String formatDuration(long durationSeconds) {
+        if (durationSeconds <= 0) {
+            return "00:00:00";
+        }
+        
+        long hours = TimeUnit.SECONDS.toHours(durationSeconds);
+        long minutes = TimeUnit.SECONDS.toMinutes(durationSeconds) % 60;
+        long seconds = durationSeconds % 60;
+        
+        return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
+    }
+    
+    /**
+     * Format timestamp as date
+     * @param timestamp Timestamp in milliseconds
+     * @return Formatted date string (e.g., "April 15, 2025")
+     */
+    public static String formatDate(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("MMMM d, yyyy", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
+    }
+    
+    /**
+     * Format timestamp as time
+     * @param timestamp Timestamp in milliseconds
+     * @return Formatted time string (e.g., "14:30")
+     */
+    public static String formatTime(long timestamp) {
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm", Locale.getDefault());
+        return sdf.format(new Date(timestamp));
+    }
+    
+    /**
+     * Format timestamp as date and time
+     * @param timestamp Timestamp in milliseconds
+     * @return Formatted date and time string (e.g., "April 15, 2025 at 14:30")
+     */
+    public static String formatDateTime(long timestamp) {
+        return formatDate(timestamp) + " at " + formatTime(timestamp);
+    }
+    
+    /**
+     * Format calories
+     * @param calories Calories burned
+     * @return Formatted calories string (e.g., "250 kcal")
      */
     public static String formatCalories(int calories) {
         return String.format(Locale.getDefault(), "%d kcal", calories);
-    }
-    
-    /**
-     * Format date to readable string
-     */
-    public static String formatDate(Date date) {
-        if (date == null) return "";
-        return DATE_FORMAT.format(date);
-    }
-    
-    /**
-     * Format date and time to readable string
-     */
-    public static String formatDateTime(Date date) {
-        if (date == null) return "";
-        return DATE_TIME_FORMAT.format(date);
-    }
-    
-    /**
-     * Format milliseconds to duration string for timer display
-     */
-    public static String formatTimerDisplay(long millis) {
-        int hours = (int) TimeUnit.MILLISECONDS.toHours(millis);
-        int minutes = (int) (TimeUnit.MILLISECONDS.toMinutes(millis) % 60);
-        int seconds = (int) (TimeUnit.MILLISECONDS.toSeconds(millis) % 60);
-        
-        return String.format(Locale.getDefault(), "%02d:%02d:%02d", hours, minutes, seconds);
     }
 }
