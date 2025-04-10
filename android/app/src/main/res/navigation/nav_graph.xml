@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/trackFragment">
+
+    <fragment
+        android:id="@+id/trackFragment"
+        android:name="com.runtracker.android.ui.fragments.TrackFragment"
+        android:label="@string/track"
+        tools:layout="@layout/fragment_track" />
+
+    <fragment
+        android:id="@+id/historyFragment"
+        android:name="com.runtracker.android.ui.fragments.HistoryFragment"
+        android:label="@string/history"
+        tools:layout="@layout/fragment_history">
+        <action
+            android:id="@+id/action_historyFragment_to_runDetailFragment"
+            app:destination="@id/runDetailFragment"
+            app:enterAnim="@anim/slide_in_right"
+            app:exitAnim="@anim/slide_out_left"
+            app:popEnterAnim="@anim/slide_in_left"
+            app:popExitAnim="@anim/slide_out_right" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/statsFragment"
+        android:name="com.runtracker.android.ui.fragments.StatsFragment"
+        android:label="@string/stats"
+        tools:layout="@layout/fragment_stats" />
+
+    <fragment
+        android:id="@+id/runDetailFragment"
+        android:name="com.runtracker.android.ui.fragments.RunDetailFragment"
+        android:label="@string/run_details"
+        tools:layout="@layout/fragment_run_detail">
+        <argument
+            android:name="runId"
+            app:argType="string" />
+    </fragment>
+
+</navigation>

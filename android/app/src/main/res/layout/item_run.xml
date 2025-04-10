@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="16dp"
+    android:layout_marginTop="8dp"
+    android:layout_marginEnd="16dp"
+    android:layout_marginBottom="8dp"
+    app:cardCornerRadius="8dp"
+    app:cardElevation="4dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="16dp">
+
+        <ImageView
+            android:id="@+id/ivRunImage"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            android:background="@color/background"
+            android:contentDescription="@string/run_details"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:src="@drawable/ic_run" />
+
+        <TextView
+            android:id="@+id/tvDate"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/ivRunImage"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="April 5, 2025" />
+
+        <TextView
+            android:id="@+id/tvDistance"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="8dp"
+            android:drawablePadding="4dp"
+            app:drawableStartCompat="@drawable/ic_distance"
+            app:layout_constraintStart_toEndOf="@+id/ivRunImage"
+            app:layout_constraintTop_toBottomOf="@+id/tvDate"
+            tools:text="5.2 km" />
+
+        <TextView
+            android:id="@+id/tvDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:drawablePadding="4dp"
+            app:drawableStartCompat="@drawable/ic_time"
+            app:layout_constraintStart_toEndOf="@+id/ivRunImage"
+            app:layout_constraintTop_toBottomOf="@+id/tvDistance"
+            tools:text="27:34" />
+
+        <TextView
+            android:id="@+id/tvPace"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:drawablePadding="4dp"
+            app:drawableStartCompat="@drawable/ic_pace"
+            app:layout_constraintBottom_toBottomOf="@+id/tvDistance"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tvDistance"
+            tools:text="5:18 /km" />
+
+        <TextView
+            android:id="@+id/tvCalories"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="8dp"
+            android:drawablePadding="4dp"
+            app:drawableStartCompat="@drawable/ic_calories"
+            app:layout_constraintBottom_toBottomOf="@+id/tvDuration"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="@+id/tvDuration"
+            tools:text="324 kcal" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.cardview.widget.CardView>
