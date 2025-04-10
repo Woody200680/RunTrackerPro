@@ -2,425 +2,360 @@ package com.runtracker.android.data;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.util.Log;
 
 import androidx.preference.PreferenceManager;
 
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 import com.runtracker.android.data.models.CoachingPlan;
 import com.runtracker.android.data.models.CoachingWorkout;
 import com.runtracker.android.utils.Constants;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
- * Manager class for handling coaching plans and workouts
+ * Manager for coaching plans and workouts
  */
 public class CoachingManager {
+
+    private static final String TAG = "CoachingManager";
     
-    private static final String PREF_COACHING_PLANS = "coaching_plans";
-    private static final String PREF_COACHING_WORKOUTS = "coaching_workouts";
-    
+    // Context
     private final Context context;
+    
+    // Data storage
+    private final Map<String, CoachingPlan> plans = new HashMap<>();
+    private final Map<String, CoachingWorkout> workouts = new HashMap<>();
+    
+    // Active data
+    private String activePlanId;
+    private CoachingPlan activePlan;
+    
+    // Preferences
     private final SharedPreferences preferences;
-    private List<CoachingPlan> plans;
-    private List<CoachingWorkout> workouts;
     
     /**
      * Constructor
-     * @param context The application context
+     * @param context Application context
      */
     public CoachingManager(Context context) {
         this.context = context;
         this.preferences = PreferenceManager.getDefaultSharedPreferences(context);
         
-        // Load or initialize plans and workouts
-        loadPlans();
-        loadWorkouts();
+        // Load data
+        loadData();
+        loadActivePlan();
         
-        // Initialize default plans if none exist
+        // Create sample data if needed
+        createSampleDataIfNeeded();
+    }
+    
+    /**
+     * Load coaching data
+     */
+    private void loadData() {
+        // In a real app, this would load from a database or file
+        // For this prototype, we'll create sample data in memory
+    }
+    
+    /**
+     * Load active plan
+     */
+    private void loadActivePlan() {
+        activePlanId = preferences.getString(Constants.PREF_ACTIVE_PLAN_ID, null);
+        if (activePlanId != null) {
+            activePlan = plans.get(activePlanId);
+        }
+    }
+    
+    /**
+     * Create sample coaching plans and workouts if none exist
+     */
+    private void createSampleDataIfNeeded() {
         if (plans.isEmpty()) {
-            initializeDefaultPlans();
+            createSamplePlans();
         }
     }
     
     /**
-     * Load coaching plans from preferences
+     * Create sample coaching plans
      */
-    private void loadPlans() {
-        String json = preferences.getString(PREF_COACHING_PLANS, null);
+    private void createSamplePlans() {
+        // Create beginner 5K plan
+        CoachingPlan beginner5k = new CoachingPlan();
+        beginner5k.setName("Beginner 5K Plan");
+        beginner5k.setDescription("An 8-week plan designed for beginners to complete their first 5K race.");
+        beginner5k.setDifficulty(CoachingPlan.DIFFICULTY_BEGINNER);
+        beginner5k.setGoal(CoachingPlan.GOAL_5K);
+        beginner5k.setDurationWeeks(8);
+        beginner5k.setWorkoutsPerWeek(3);
+        addSampleWorkoutsToPlan(beginner5k);
         
-        if (json != null) {
-            Gson gson = new Gson();
-            Type type = new TypeToken<List<CoachingPlan>>(){}.getType();
-            plans = gson.fromJson(json, type);
-        } else {
-            plans = new ArrayList<>();
+        // Create intermediate 10K plan
+        CoachingPlan intermediate10k = new CoachingPlan();
+        intermediate10k.setName("Intermediate 10K Plan");
+        intermediate10k.setDescription("A 10-week plan for runners who want to improve their 10K time.");
+        intermediate10k.setDifficulty(CoachingPlan.DIFFICULTY_INTERMEDIATE);
+        intermediate10k.setGoal(CoachingPlan.GOAL_10K);
+        intermediate10k.setDurationWeeks(10);
+        intermediate10k.setWorkoutsPerWeek(4);
+        addSampleWorkoutsToPlan(intermediate10k);
+        
+        // Create advanced half marathon plan
+        CoachingPlan advancedHalf = new CoachingPlan();
+        advancedHalf.setName("Advanced Half Marathon");
+        advancedHalf.setDescription("A 12-week plan for experienced runners training for a half marathon.");
+        advancedHalf.setDifficulty(CoachingPlan.DIFFICULTY_ADVANCED);
+        advancedHalf.setGoal(CoachingPlan.GOAL_HALF_MARATHON);
+        advancedHalf.setDurationWeeks(12);
+        advancedHalf.setWorkoutsPerWeek(5);
+        addSampleWorkoutsToPlan(advancedHalf);
+        
+        // Add plans to map
+        addPlan(beginner5k);
+        addPlan(intermediate10k);
+        addPlan(advancedHalf);
+    }
+    
+    /**
+     * Add sample workouts to a plan
+     * @param plan The coaching plan
+     */
+    private void addSampleWorkoutsToPlan(CoachingPlan plan) {
+        int weeks = plan.getDurationWeeks();
+        int workoutsPerWeek = plan.getWorkoutsPerWeek();
+        
+        for (int week = 1; week <= weeks; week++) {
+            for (int day = 1; day <= workoutsPerWeek; day++) {
+                // Create workout
+                CoachingWorkout workout = new CoachingWorkout();
+                
+                // Set basic properties
+                workout.setWeek(week);
+                workout.setDayOfWeek(day);
+                
+                // Set type based on day of week
+                if (day == 1) {
+                    // Monday: Easy run
+                    workout.setName("Easy Run");
+                    workout.setType(CoachingWorkout.TYPE_ENDURANCE);
+                    
+                    // Add warm-up segment
+                    CoachingWorkout.WorkoutSegment warmup = new CoachingWorkout.WorkoutSegment();
+                    warmup.setType(CoachingWorkout.WorkoutSegment.TYPE_WARMUP);
+                    warmup.setDuration(5 * 60); // 5 minutes
+                    warmup.setInstructions("Start with a gentle warm-up");
+                    workout.addSegment(warmup);
+                    
+                    // Add main segment
+                    CoachingWorkout.WorkoutSegment main = new CoachingWorkout.WorkoutSegment();
+                    main.setType(CoachingWorkout.WorkoutSegment.TYPE_ACTIVE);
+                    main.setDuration((20 + (week * 2)) * 60); // Increases with weeks
+                    main.setTargetPaceMin(6.0); // 6:00 min/km
+                    main.setTargetPaceMax(7.0); // 7:00 min/km
+                    main.setIntensity(CoachingWorkout.WorkoutSegment.INTENSITY_EASY);
+                    main.setInstructions("Keep a conversational pace");
+                    workout.addSegment(main);
+                    
+                    // Add cool-down segment
+                    CoachingWorkout.WorkoutSegment cooldown = new CoachingWorkout.WorkoutSegment();
+                    cooldown.setType(CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN);
+                    cooldown.setDuration(5 * 60); // 5 minutes
+                    cooldown.setInstructions("Cool down with a gentle jog or walk");
+                    workout.addSegment(cooldown);
+                    
+                } else if (day == workoutsPerWeek - 1) {
+                    // Second-to-last day: Tempo or interval run
+                    if (week % 2 == 0) {
+                        // Even weeks: Tempo run
+                        workout.setName("Tempo Run");
+                        workout.setType(CoachingWorkout.TYPE_TEMPO);
+                        
+                        // Add warm-up segment
+                        CoachingWorkout.WorkoutSegment warmup = new CoachingWorkout.WorkoutSegment();
+                        warmup.setType(CoachingWorkout.WorkoutSegment.TYPE_WARMUP);
+                        warmup.setDuration(10 * 60); // 10 minutes
+                        warmup.setInstructions("Start with a gentle warm-up");
+                        workout.addSegment(warmup);
+                        
+                        // Add tempo segment
+                        CoachingWorkout.WorkoutSegment tempo = new CoachingWorkout.WorkoutSegment();
+                        tempo.setType(CoachingWorkout.WorkoutSegment.TYPE_ACTIVE);
+                        tempo.setDuration((15 + (week)) * 60); // Increases with weeks
+                        tempo.setTargetPaceMin(5.0); // 5:00 min/km
+                        tempo.setTargetPaceMax(5.5); // 5:30 min/km
+                        tempo.setIntensity(CoachingWorkout.WorkoutSegment.INTENSITY_MODERATE);
+                        tempo.setInstructions("Maintain a challenging but sustainable pace");
+                        workout.addSegment(tempo);
+                        
+                        // Add cool-down segment
+                        CoachingWorkout.WorkoutSegment cooldown = new CoachingWorkout.WorkoutSegment();
+                        cooldown.setType(CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN);
+                        cooldown.setDuration(10 * 60); // 10 minutes
+                        cooldown.setInstructions("Cool down with a gentle jog or walk");
+                        workout.addSegment(cooldown);
+                        
+                    } else {
+                        // Odd weeks: Interval run
+                        workout.setName("Interval Training");
+                        workout.setType(CoachingWorkout.TYPE_INTERVAL);
+                        
+                        // Add warm-up segment
+                        CoachingWorkout.WorkoutSegment warmup = new CoachingWorkout.WorkoutSegment();
+                        warmup.setType(CoachingWorkout.WorkoutSegment.TYPE_WARMUP);
+                        warmup.setDuration(10 * 60); // 10 minutes
+                        warmup.setInstructions("Start with a gentle warm-up");
+                        workout.addSegment(warmup);
+                        
+                        // Add intervals
+                        int intervals = 4 + (week / 2); // Increases with weeks
+                        for (int i = 0; i < intervals; i++) {
+                            // Active interval
+                            CoachingWorkout.WorkoutSegment active = new CoachingWorkout.WorkoutSegment();
+                            active.setType(CoachingWorkout.WorkoutSegment.TYPE_ACTIVE);
+                            active.setDuration(60); // 1 minute
+                            active.setTargetPaceMin(4.0); // 4:00 min/km
+                            active.setTargetPaceMax(4.5); // 4:30 min/km
+                            active.setIntensity(CoachingWorkout.WorkoutSegment.INTENSITY_HARD);
+                            active.setInstructions("Push hard for this interval");
+                            workout.addSegment(active);
+                            
+                            // Recovery interval
+                            CoachingWorkout.WorkoutSegment recovery = new CoachingWorkout.WorkoutSegment();
+                            recovery.setType(CoachingWorkout.WorkoutSegment.TYPE_RECOVERY);
+                            recovery.setDuration(90); // 1.5 minutes
+                            recovery.setTargetPaceMin(7.0); // 7:00 min/km
+                            recovery.setTargetPaceMax(8.0); // 8:00 min/km
+                            recovery.setIntensity(CoachingWorkout.WorkoutSegment.INTENSITY_EASY);
+                            recovery.setInstructions("Recover with a gentle jog");
+                            workout.addSegment(recovery);
+                        }
+                        
+                        // Add cool-down segment
+                        CoachingWorkout.WorkoutSegment cooldown = new CoachingWorkout.WorkoutSegment();
+                        cooldown.setType(CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN);
+                        cooldown.setDuration(10 * 60); // 10 minutes
+                        cooldown.setInstructions("Cool down with a gentle jog or walk");
+                        workout.addSegment(cooldown);
+                    }
+                } else if (day == workoutsPerWeek) {
+                    // Last day: Long run
+                    workout.setName("Long Run");
+                    workout.setType(CoachingWorkout.TYPE_ENDURANCE);
+                    
+                    // Add warm-up segment
+                    CoachingWorkout.WorkoutSegment warmup = new CoachingWorkout.WorkoutSegment();
+                    warmup.setType(CoachingWorkout.WorkoutSegment.TYPE_WARMUP);
+                    warmup.setDuration(10 * 60); // 10 minutes
+                    warmup.setInstructions("Start with a gentle warm-up");
+                    workout.addSegment(warmup);
+                    
+                    // Add main segment
+                    CoachingWorkout.WorkoutSegment main = new CoachingWorkout.WorkoutSegment();
+                    main.setType(CoachingWorkout.WorkoutSegment.TYPE_ACTIVE);
+                    // Duration increases with weeks, longer for more advanced plans
+                    int baseDuration = 30;
+                    if (plan.getDifficulty() == CoachingPlan.DIFFICULTY_INTERMEDIATE) {
+                        baseDuration = 40;
+                    } else if (plan.getDifficulty() == CoachingPlan.DIFFICULTY_ADVANCED) {
+                        baseDuration = 50;
+                    }
+                    main.setDuration((baseDuration + (week * 5)) * 60);
+                    main.setTargetPaceMin(6.0); // 6:00 min/km
+                    main.setTargetPaceMax(7.0); // 7:00 min/km
+                    main.setIntensity(CoachingWorkout.WorkoutSegment.INTENSITY_EASY);
+                    main.setInstructions("Keep a comfortable, sustainable pace");
+                    workout.addSegment(main);
+                    
+                    // Add cool-down segment
+                    CoachingWorkout.WorkoutSegment cooldown = new CoachingWorkout.WorkoutSegment();
+                    cooldown.setType(CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN);
+                    cooldown.setDuration(10 * 60); // 10 minutes
+                    cooldown.setInstructions("Cool down with a gentle jog or walk");
+                    workout.addSegment(cooldown);
+                    
+                } else {
+                    // Other days: Recovery or speed work
+                    if (week % 2 == 0) {
+                        // Even weeks: Recovery run
+                        workout.setName("Recovery Run");
+                        workout.setType(CoachingWorkout.TYPE_RECOVERY);
+                        
+                        // Add warm-up segment
+                        CoachingWorkout.WorkoutSegment warmup = new CoachingWorkout.WorkoutSegment();
+                        warmup.setType(CoachingWorkout.WorkoutSegment.TYPE_WARMUP);
+                        warmup.setDuration(5 * 60); // 5 minutes
+                        warmup.setInstructions("Start with a gentle warm-up");
+                        workout.addSegment(warmup);
+                        
+                        // Add main segment
+                        CoachingWorkout.WorkoutSegment main = new CoachingWorkout.WorkoutSegment();
+                        main.setType(CoachingWorkout.WorkoutSegment.TYPE_ACTIVE);
+                        main.setDuration(25 * 60); // 25 minutes
+                        main.setTargetPaceMin(6.5); // 6:30 min/km
+                        main.setTargetPaceMax(7.5); // 7:30 min/km
+                        main.setIntensity(CoachingWorkout.WorkoutSegment.INTENSITY_EASY);
+                        main.setInstructions("Keep it very easy, focus on recovery");
+                        workout.addSegment(main);
+                        
+                        // Add cool-down segment
+                        CoachingWorkout.WorkoutSegment cooldown = new CoachingWorkout.WorkoutSegment();
+                        cooldown.setType(CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN);
+                        cooldown.setDuration(5 * 60); // 5 minutes
+                        cooldown.setInstructions("Cool down with a gentle jog or walk");
+                        workout.addSegment(cooldown);
+                        
+                    } else {
+                        // Odd weeks: Speed work
+                        workout.setName("Speed Work");
+                        workout.setType(CoachingWorkout.TYPE_SPEED);
+                        
+                        // Add warm-up segment
+                        CoachingWorkout.WorkoutSegment warmup = new CoachingWorkout.WorkoutSegment();
+                        warmup.setType(CoachingWorkout.WorkoutSegment.TYPE_WARMUP);
+                        warmup.setDuration(10 * 60); // 10 minutes
+                        warmup.setInstructions("Start with a thorough warm-up");
+                        workout.addSegment(warmup);
+                        
+                        // Add main segment with strides
+                        CoachingWorkout.WorkoutSegment main = new CoachingWorkout.WorkoutSegment();
+                        main.setType(CoachingWorkout.WorkoutSegment.TYPE_ACTIVE);
+                        main.setDuration(20 * 60); // 20 minutes
+                        main.setTargetPaceMin(6.0); // 6:00 min/km
+                        main.setTargetPaceMax(6.5); // 6:30 min/km
+                        main.setIntensity(CoachingWorkout.WorkoutSegment.INTENSITY_MODERATE);
+                        main.setInstructions("Include 6-8 strides of 20 seconds during this run");
+                        workout.addSegment(main);
+                        
+                        // Add cool-down segment
+                        CoachingWorkout.WorkoutSegment cooldown = new CoachingWorkout.WorkoutSegment();
+                        cooldown.setType(CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN);
+                        cooldown.setDuration(10 * 60); // 10 minutes
+                        cooldown.setInstructions("Cool down with a gentle jog or walk");
+                        workout.addSegment(cooldown);
+                    }
+                }
+                
+                // Calculate scheduled date (hypothetical - actual implementation would be more complex)
+                // For this example, we'll just set it based on current date plus offset
+                Calendar cal = Calendar.getInstance();
+                cal.add(Calendar.WEEK_OF_YEAR, week - 1);
+                cal.set(Calendar.DAY_OF_WEEK, day + 1); // +1 because Calendar.SUNDAY is 1
+                workout.setScheduledDate(cal.getTimeInMillis());
+                
+                // Add workout to plan
+                plan.addWorkout(workout);
+                
+                // Also add to workouts map
+                workouts.put(workout.getId(), workout);
+            }
         }
-    }
-    
-    /**
-     * Save coaching plans to preferences
-     */
-    private void savePlans() {
-        Gson gson = new Gson();
-        String json = gson.toJson(plans);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(PREF_COACHING_PLANS, json);
-        editor.apply();
-    }
-    
-    /**
-     * Load workouts from preferences
-     */
-    private void loadWorkouts() {
-        String json = preferences.getString(PREF_COACHING_WORKOUTS, null);
-        
-        if (json != null) {
-            Gson gson = new Gson();
-            Type type = new TypeToken<List<CoachingWorkout>>(){}.getType();
-            workouts = gson.fromJson(json, type);
-        } else {
-            workouts = new ArrayList<>();
-        }
-    }
-    
-    /**
-     * Save workouts to preferences
-     */
-    private void saveWorkouts() {
-        Gson gson = new Gson();
-        String json = gson.toJson(workouts);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putString(PREF_COACHING_WORKOUTS, json);
-        editor.apply();
-    }
-    
-    /**
-     * Initialize default coaching plans
-     */
-    private void initializeDefaultPlans() {
-        // Create 5K Beginner Plan
-        CoachingPlan beginnerPlan = createPlan(
-            "5K_BEGINNER",
-            "5K Beginner Plan",
-            "An 8-week plan for beginners to complete their first 5K race",
-            CoachingPlan.TYPE_BEGINNER,
-            CoachingPlan.GOAL_5K,
-            8); // 8 weeks
-        
-        // Create 10K Intermediate Plan
-        CoachingPlan intermediatePlan = createPlan(
-            "10K_INTERMEDIATE",
-            "10K Intermediate Plan",
-            "A 10-week plan for runners who have completed a 5K and want to step up to 10K",
-            CoachingPlan.TYPE_INTERMEDIATE,
-            CoachingPlan.GOAL_10K,
-            10); // 10 weeks
-        
-        // Create Half Marathon Advanced Plan
-        CoachingPlan advancedPlan = createPlan(
-            "HALF_MARATHON_ADVANCED",
-            "Half Marathon Advanced Plan",
-            "A 12-week plan for experienced runners training for a half marathon",
-            CoachingPlan.TYPE_ADVANCED,
-            CoachingPlan.GOAL_HALF_MARATHON,
-            12); // 12 weeks
-        
-        // Add workouts to the beginner plan (just a sample for the first week)
-        addWorkoutsToBeginner5KPlan(beginnerPlan);
-        
-        // Add workouts to the intermediate plan (just a sample)
-        addWorkoutsToIntermediate10KPlan(intermediatePlan);
-        
-        // Add workouts to the advanced plan (just a sample)
-        addWorkoutsToAdvancedHalfMarathonPlan(advancedPlan);
-        
-        // Save the new plans and workouts
-        savePlans();
-        saveWorkouts();
-    }
-    
-    /**
-     * Create a new coaching plan
-     */
-    private CoachingPlan createPlan(String id, String name, String description, int type, int goal, int durationWeeks) {
-        CoachingPlan plan = new CoachingPlan(id, name, description, type, goal, durationWeeks);
-        plans.add(plan);
-        return plan;
-    }
-    
-    /**
-     * Add workouts to the beginner 5K plan
-     * @param plan The beginner plan
-     */
-    private void addWorkoutsToBeginner5KPlan(CoachingPlan plan) {
-        // Week 1
-        
-        // Monday - Easy Run
-        CoachingWorkout monday = createWorkout(
-            UUID.randomUUID().toString(),
-            "Easy Run",
-            "A gentle introduction to running with walk breaks",
-            CoachingWorkout.TYPE_EASY_RUN,
-            1, // Week 1
-            1, // Monday
-            plan.getId());
-        
-        // Add segments to Monday workout
-        monday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_WARMUP,
-            300, // 5 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            10.0, // 10 min/km (very slow jog or brisk walk)
-            12.0, // 12 min/km
-            "Start with a gentle 5-minute warm-up walk to prepare your muscles"));
-        
-        monday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_ACTIVE,
-            60, // 1 minute
-            8, // Repeat 8 times
-            CoachingWorkout.WorkoutSegment.INTENSITY_MODERATE,
-            7.0, // 7 min/km
-            9.0, // 9 min/km
-            "Run for 1 minute at a comfortable pace"));
-        
-        monday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_RECOVERY,
-            90, // 1.5 minutes
-            8, // Repeat 8 times
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            12.0, // 12 min/km (walking pace)
-            15.0, // 15 min/km
-            "Walk for 1.5 minutes to recover"));
-        
-        monday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN,
-            300, // 5 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            12.0, // 12 min/km
-            15.0, // 15 min/km
-            "Cool down with a 5-minute walk"));
-        
-        // Wednesday - Easy Run (same structure as Monday)
-        CoachingWorkout wednesday = createWorkout(
-            UUID.randomUUID().toString(),
-            "Easy Run",
-            "Building endurance with run/walk intervals",
-            CoachingWorkout.TYPE_EASY_RUN,
-            1, // Week 1
-            3, // Wednesday
-            plan.getId());
-        
-        // Same segments as Monday
-        wednesday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_WARMUP,
-            300, // 5 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            10.0, // 10 min/km
-            12.0, // 12 min/km
-            "Start with a gentle 5-minute warm-up walk"));
-        
-        wednesday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_ACTIVE,
-            60, // 1 minute
-            8, // Repeat 8 times
-            CoachingWorkout.WorkoutSegment.INTENSITY_MODERATE,
-            7.0, // 7 min/km
-            9.0, // 9 min/km
-            "Run for 1 minute"));
-        
-        wednesday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_RECOVERY,
-            90, // 1.5 minutes
-            8, // Repeat 8 times
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            12.0, // 12 min/km
-            15.0, // 15 min/km
-            "Walk for 1.5 minutes"));
-        
-        wednesday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN,
-            300, // 5 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            12.0, // 12 min/km
-            15.0, // 15 min/km
-            "Cool down with a 5-minute walk"));
-        
-        // Friday - Rest Day
-        CoachingWorkout friday = createWorkout(
-            UUID.randomUUID().toString(),
-            "Rest Day",
-            "Recovery day - no running",
-            CoachingWorkout.TYPE_REST,
-            1, // Week 1
-            5, // Friday
-            plan.getId());
-        
-        // Saturday - Long Run
-        CoachingWorkout saturday = createWorkout(
-            UUID.randomUUID().toString(),
-            "Long Run",
-            "Gradually building distance with run/walk method",
-            CoachingWorkout.TYPE_LONG_RUN,
-            1, // Week 1
-            6, // Saturday
-            plan.getId());
-        
-        saturday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_WARMUP,
-            300, // 5 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            10.0, // 10 min/km
-            12.0, // 12 min/km
-            "Start with a gentle 5-minute warm-up walk"));
-        
-        saturday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_ACTIVE,
-            60, // 1 minute
-            10, // Repeat 10 times
-            CoachingWorkout.WorkoutSegment.INTENSITY_MODERATE,
-            7.0, // 7 min/km
-            9.0, // 9 min/km
-            "Run for 1 minute"));
-        
-        saturday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_RECOVERY,
-            90, // 1.5 minutes
-            10, // Repeat 10 times
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            12.0, // 12 min/km
-            15.0, // 15 min/km
-            "Walk for 1.5 minutes"));
-        
-        saturday.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN,
-            300, // 5 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            12.0, // 12 min/km
-            15.0, // 15 min/km
-            "Cool down with a 5-minute walk"));
-    }
-    
-    /**
-     * Add workouts to the intermediate 10K plan
-     * @param plan The intermediate plan
-     */
-    private void addWorkoutsToIntermediate10KPlan(CoachingPlan plan) {
-        // This would add detailed workouts for the intermediate plan
-        // For brevity, we'll add just a sample workout
-        
-        // Week 1, Monday - Tempo Run
-        CoachingWorkout tempoRun = createWorkout(
-            UUID.randomUUID().toString(),
-            "Tempo Run",
-            "Medium-intensity run to build speed and endurance",
-            CoachingWorkout.TYPE_TEMPO_RUN,
-            1, // Week 1
-            1, // Monday
-            plan.getId());
-        
-        tempoRun.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_WARMUP,
-            600, // 10 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            7.0, // 7 min/km
-            8.0, // 8 min/km
-            "Warm up with a 10-minute easy jog"));
-        
-        tempoRun.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_ACTIVE,
-            1200, // 20 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_MODERATE,
-            5.5, // 5:30 min/km
-            6.0, // 6:00 min/km
-            "Run at a comfortably hard pace for 20 minutes"));
-        
-        tempoRun.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN,
-            600, // 10 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            7.0, // 7 min/km
-            8.0, // 8 min/km
-            "Cool down with a 10-minute easy jog"));
-    }
-    
-    /**
-     * Add workouts to the advanced half marathon plan
-     * @param plan The advanced plan
-     */
-    private void addWorkoutsToAdvancedHalfMarathonPlan(CoachingPlan plan) {
-        // This would add detailed workouts for the advanced plan
-        // For brevity, we'll add just a sample workout
-        
-        // Week 1, Tuesday - Interval Training
-        CoachingWorkout intervalTraining = createWorkout(
-            UUID.randomUUID().toString(),
-            "Interval Training",
-            "High-intensity intervals to improve speed and VO2 max",
-            CoachingWorkout.TYPE_INTERVAL,
-            1, // Week 1
-            2, // Tuesday
-            plan.getId());
-        
-        intervalTraining.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_WARMUP,
-            900, // 15 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            6.0, // 6 min/km
-            7.0, // 7 min/km
-            "Warm up with a 15-minute easy jog"));
-        
-        intervalTraining.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_ACTIVE,
-            400, // 400 seconds (about 400m at 4:10 min/km pace)
-            6, // 6 repetitions
-            CoachingWorkout.WorkoutSegment.INTENSITY_HARD,
-            4.0, // 4 min/km
-            4.5, // 4:30 min/km
-            "Run hard for about 400 meters"));
-        
-        intervalTraining.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_RECOVERY,
-            200, // 200 seconds
-            6, // 6 repetitions
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            6.0, // 6 min/km
-            7.0, // 7 min/km
-            "Recover with easy jogging for about 200 meters"));
-        
-        intervalTraining.addSegment(new CoachingWorkout.WorkoutSegment(
-            CoachingWorkout.WorkoutSegment.TYPE_COOLDOWN,
-            900, // 15 minutes
-            1,
-            CoachingWorkout.WorkoutSegment.INTENSITY_EASY,
-            6.0, // 6 min/km
-            7.0, // 7 min/km
-            "Cool down with a 15-minute easy jog"));
-    }
-    
-    /**
-     * Create a new workout
-     */
-    private CoachingWorkout createWorkout(String id, String name, String description, 
-                                         int type, int week, int dayOfWeek, String planId) {
-        CoachingWorkout workout = new CoachingWorkout(id, name, description, type, week, dayOfWeek, planId);
-        workouts.add(workout);
-        return workout;
     }
     
     /**
@@ -428,156 +363,149 @@ public class CoachingManager {
      * @return List of coaching plans
      */
     public List<CoachingPlan> getAllPlans() {
-        return new ArrayList<>(plans);
+        return new ArrayList<>(plans.values());
     }
     
     /**
-     * Get coaching plan by ID
+     * Get a coaching plan by ID
      * @param planId Plan ID
      * @return Coaching plan or null if not found
      */
-    public CoachingPlan getPlanById(String planId) {
-        for (CoachingPlan plan : plans) {
-            if (plan.getId().equals(planId)) {
-                return plan;
-            }
-        }
-        return null;
+    public CoachingPlan getPlan(String planId) {
+        return plans.get(planId);
     }
     
     /**
-     * Get all workouts for a specific plan
-     * @param planId Plan ID
-     * @return List of workouts
+     * Add a coaching plan
+     * @param plan Coaching plan to add
      */
-    public List<CoachingWorkout> getWorkoutsForPlan(String planId) {
-        List<CoachingWorkout> planWorkouts = new ArrayList<>();
-        for (CoachingWorkout workout : workouts) {
-            if (workout.getPlanId().equals(planId)) {
-                planWorkouts.add(workout);
-            }
+    public void addPlan(CoachingPlan plan) {
+        plans.put(plan.getId(), plan);
+        
+        // Add all workouts to workouts map
+        for (CoachingWorkout workout : plan.getWorkouts()) {
+            workouts.put(workout.getId(), workout);
         }
-        return planWorkouts;
     }
     
     /**
-     * Get the active coaching plan
-     * @return Active coaching plan or null if none active
+     * Get a workout by ID
+     * @param workoutId Workout ID
+     * @return Coaching workout or null if not found
+     */
+    public CoachingWorkout getWorkout(String workoutId) {
+        return workouts.get(workoutId);
+    }
+    
+    /**
+     * Get the active plan
+     * @return Active coaching plan or null if none set
      */
     public CoachingPlan getActivePlan() {
-        String activePlanId = preferences.getString(Constants.PREF_ACTIVE_PLAN_ID, null);
-        if (activePlanId == null) {
-            return null;
-        }
-        
-        return getPlanById(activePlanId);
+        return activePlan;
     }
     
     /**
-     * Set the active coaching plan
-     * @param plan Plan to set as active
+     * Set the active plan
+     * @param plan Coaching plan to set as active
      */
     public void setActivePlan(CoachingPlan plan) {
-        // First, deactivate all plans
-        for (CoachingPlan p : plans) {
-            p.setActive(false);
-        }
-        
-        // Activate the selected plan
         if (plan != null) {
-            plan.setActive(true);
-            preferences.edit().putString(Constants.PREF_ACTIVE_PLAN_ID, plan.getId()).apply();
-        } else {
-            preferences.edit().remove(Constants.PREF_ACTIVE_PLAN_ID).apply();
+            activePlanId = plan.getId();
+            activePlan = plan;
+            
+            // Save to preferences
+            SharedPreferences.Editor editor = preferences.edit();
+            editor.putString(Constants.PREF_ACTIVE_PLAN_ID, activePlanId);
+            editor.apply();
         }
-        
-        // Save changes
-        savePlans();
     }
     
     /**
-     * Get the next scheduled workout based on current date
-     * @return The next workout or null if none found
+     * Clear the active plan
+     */
+    public void clearActivePlan() {
+        activePlanId = null;
+        activePlan = null;
+        
+        // Save to preferences
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.remove(Constants.PREF_ACTIVE_PLAN_ID);
+        editor.apply();
+    }
+    
+    /**
+     * Get the next scheduled workout
+     * @return Next scheduled workout or null if none
      */
     public CoachingWorkout getNextScheduledWorkout() {
-        CoachingPlan activePlan = getActivePlan();
         if (activePlan == null) {
             return null;
         }
         
-        // Get current date
-        Calendar calendar = Calendar.getInstance();
-        int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+        // Get current time
+        long now = System.currentTimeMillis();
         
-        // Convert to 1-7 (Monday-Sunday) format
-        int adjustedDayOfWeek = (dayOfWeek == Calendar.SUNDAY) ? 7 : dayOfWeek - 1;
-        
-        // Set current day and check for next workout
-        activePlan.setCurrentDay(adjustedDayOfWeek);
-        return activePlan.getNextWorkout();
-    }
-    
-    /**
-     * Get workout by ID
-     * @param workoutId Workout ID
-     * @return Workout or null if not found
-     */
-    public CoachingWorkout getWorkoutById(String workoutId) {
-        for (CoachingWorkout workout : workouts) {
-            if (workout.getId().equals(workoutId)) {
-                return workout;
+        // Get all workouts from active plan that are scheduled and not completed/skipped
+        List<CoachingWorkout> scheduledWorkouts = new ArrayList<>();
+        for (CoachingWorkout workout : activePlan.getWorkouts()) {
+            if (workout.getState() == CoachingWorkout.STATE_SCHEDULED && 
+                    workout.getScheduledDate() >= now) {
+                scheduledWorkouts.add(workout);
             }
         }
-        return null;
+        
+        // Sort by scheduled date
+        Collections.sort(scheduledWorkouts, new Comparator<CoachingWorkout>() {
+            @Override
+            public int compare(CoachingWorkout w1, CoachingWorkout w2) {
+                return Long.compare(w1.getScheduledDate(), w2.getScheduledDate());
+            }
+        });
+        
+        // Return the first one, or null if none
+        return scheduledWorkouts.isEmpty() ? null : scheduledWorkouts.get(0);
     }
     
     /**
-     * Mark a workout as completed
-     * @param workoutId Workout ID
-     * @param runId Associated run ID
-     * @return true if successful
+     * Get workout progress for the active plan
+     * @return Completion percentage (0-100)
      */
-    public boolean markWorkoutCompleted(String workoutId, String runId) {
-        CoachingWorkout workout = getWorkoutById(workoutId);
-        if (workout == null) {
-            return false;
+    public int getWorkoutProgress() {
+        if (activePlan == null) {
+            return 0;
         }
         
-        workout.setCompleted(true);
-        workout.setRunId(runId);
-        saveWorkouts();
-        return true;
+        return activePlan.getCompletionPercentage();
     }
     
     /**
-     * Get the coaching type preference
-     * @return Coaching type
+     * Mark a workout as completed with a run
+     * @param workoutId Workout ID
+     * @param runId Run ID
      */
-    public int getCoachingType() {
-        return preferences.getInt(Constants.PREF_COACHING_TYPE, Constants.COACHING_TYPE_BASIC);
+    public void markWorkoutCompleted(String workoutId, String runId) {
+        CoachingWorkout workout = workouts.get(workoutId);
+        if (workout != null) {
+            workout.setCompletedRunId(runId);
+            workout.setState(CoachingWorkout.STATE_COMPLETED);
+            
+            // In a real app, this would save to a database
+            Log.d(TAG, "Workout " + workoutId + " marked as completed with run " + runId);
+        }
     }
     
     /**
-     * Set the coaching type preference
-     * @param coachingType Coaching type
+     * Mark a workout as skipped
+     * @param workoutId Workout ID
      */
-    public void setCoachingType(int coachingType) {
-        preferences.edit().putInt(Constants.PREF_COACHING_TYPE, coachingType).apply();
-    }
-    
-    /**
-     * Check if coaching is enabled
-     * @return true if enabled
-     */
-    public boolean isCoachingEnabled() {
-        return preferences.getBoolean(Constants.PREF_COACHING_ENABLED, true);
-    }
-    
-    /**
-     * Enable or disable coaching
-     * @param enabled Enabled state
-     */
-    public void setCoachingEnabled(boolean enabled) {
-        preferences.edit().putBoolean(Constants.PREF_COACHING_ENABLED, enabled).apply();
+    public void markWorkoutSkipped(String workoutId) {
+        CoachingWorkout workout = workouts.get(workoutId);
+        if (workout != null) {
+            workout.setState(CoachingWorkout.STATE_SKIPPED);
+            
+            // In a real app, this would save to a database
+            Log.d(TAG, "Workout " + workoutId + " marked as skipped");
+        }
     }
 }
